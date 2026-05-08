@@ -185,3 +185,4 @@ open landing/index.html
 | Backend  | Azure App Service B1    | ~R$ 70/mês |
 | Banco    | SQLite em /home/data/   | Incluído   |
 # Kadu
+# Kadu
