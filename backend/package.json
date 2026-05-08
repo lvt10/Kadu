@@ -1,0 +1,19 @@
+{
+  "name": "escola-backend",
+  "version": "1.0.0",
+  "description": "Backend para o sistema escolar — Express + node:sqlite",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --experimental-sqlite server.js",
+    "dev": "node --watch --experimental-sqlite server.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.18.3",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

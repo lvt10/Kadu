@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kadu — Portal do Professor</title>
+  <meta name="description" content="Kadu é o portal completo para professores: gerencie turmas, alunos, notas bimestrais e gere boletins em segundos." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- FIX #12: &display=swap evita FOIT (texto invisível durante carregamento) -->
+  <!-- FIX #11: Fredoka removido — logo usa SVG puro, sem necessidade da fonte -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cyan:       #06b6d4;
+      --cyan-dark:  #0891b2;
+      --cyan-deeper:#0e7490;
+      --emerald:    #34d399;
+      --emerald-mid:#10b981;
+      --emerald-dk: #059669;
+      --grad:       linear-gradient(135deg, #06b6d4 0%, #34d399 100%);
+      --grad-dark:  linear-gradient(135deg, #0891b2 0%, #10b981 100%);
+      --bg-tint:    #ecfeff;
+      --bg-tint2:   #f0fdf4;
+      --ink:        #0f172a;
+      --slate:      #334155;
+      --muted:      #64748b;
+      --border:     #e2e8f0;
+      --border-t:   #cffafe;
+      --white:      #ffffff;
+      --shadow:     0 4px 24px rgba(6,182,212,.10);
+      --shadow-lg:  0 16px 56px rgba(6,182,212,.15);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink); background: var(--white);
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── FIX #2: Skip link ─────────────────────────────────────── */
+    .skip-link {
+      position: absolute; top: -100%; left: 8px;
+      background: var(--cyan-deeper); color: white;
+      padding: 10px 20px; border-radius: 0 0 10px 10px;
+      font-weight: 600; font-size: .95rem; text-decoration: none;
+      z-index: 9999; transition: top .15s;
+    }
+    .skip-link:focus { top: 0; outline: 2px solid white; outline-offset: 2px; }
+
+    /* ── FIX #5: Focus visible global ─────────────────────────── */
+    :focus-visible {
+      outline: 2px solid var(--cyan-dark);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+    /* Botões e links já têm border-radius próprio */
+    .btn:focus-visible     { border-radius: 10px; }
+    .nav-links a:focus-visible { border-radius: 8px; }
+    .footer-nav a:focus-visible { border-radius: 4px; }
+    .logo:focus-visible    { border-radius: 8px; }
+    .f-card:focus-visible  { border-radius: 16px; }
+
+    /* ─── Utilitários ─────────────────────────────────────────── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--bg-tint); color: var(--cyan-deeper);
+      font-size: .72rem; font-weight: 600; letter-spacing: .07em;
+      text-transform: uppercase; border-radius: 100px; padding: 5px 13px;
+      margin-bottom: 20px; border: 1px solid var(--border-t);
+    }
+    h2.section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.9rem, 3.2vw, 2.6rem);
+      font-weight: 800; line-height: 1.15; letter-spacing: -.02em;
+      color: var(--ink);
+    }
+    .section-sub { font-size: 1.05rem; color: var(--muted); line-height: 1.7; margin-top: 14px; }
+
+    /* ─── NAV ─────────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,.92); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-mark {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--grad);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; box-shadow: 0 2px 10px rgba(6,182,212,.35);
+    }
+    .logo-mark svg { width: 22px; height: 22px; }
+    /* FIX #11: logo-text usa fonte do sistema em vez de Fredoka */
+    .logo-text {
+      font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800;
+      background: var(--grad-dark);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+    .nav-links a {
+      color: var(--slate); font-size: .9rem; font-weight: 500;
+      text-decoration: none; padding: 6px 13px; border-radius: 8px;
+      transition: background .15s, color .15s;
+    }
+    .nav-links a:hover { background: var(--bg-tint); color: var(--cyan-deeper); }
+
+    /* ─── Botões ──────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-family: 'DM Sans', sans-serif; font-weight: 600;
+      text-decoration: none; border-radius: 10px; cursor: pointer;
+      transition: all .18s; white-space: nowrap; border: none;
+    }
+    .btn-sm { font-size: .9rem; padding: 8px 18px; }
+    .btn-md { font-size: 1rem;  padding: 13px 28px; }
+    .btn-primary {
+      background: var(--grad); color: white;
+      box-shadow: 0 4px 18px rgba(6,182,212,.4);
+    }
+    .btn-primary:hover {
+      background: var(--grad-dark);
+      box-shadow: 0 6px 24px rgba(6,182,212,.5);
+      transform: translateY(-2px);
+    }
+    .btn-outline {
+      background: white; color: var(--slate);
+      border: 1.5px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--cyan); color: var(--cyan-deeper); }
+    .btn-white {
+      background: white; color: var(--cyan-deeper);
+      box-shadow: 0 6px 24px rgba(0,0,0,.18);
+    }
+    .btn-white:hover { background: #f0fdfa; transform: translateY(-2px); box-shadow: 0 10px 32px rgba(0,0,0,.22); }
+
+    .hamburger {
+      display: none; background: none; border: none; cursor: pointer; padding: 4px;
+      /* FIX #8: touch target mínimo 44x44px */
+      min-width: 44px; min-height: 44px;
+      align-items: center; justify-content: center;
+    }
+
+    /* ─── HERO ────────────────────────────────────────────────── */
+    .hero {
+      padding: 100px 0 80px;
+      background: linear-gradient(168deg, #ecfeff 0%, #f0fdf4 40%, #ffffff 70%);
+      overflow: hidden; position: relative;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -200px; right: -160px;
+      width: 640px; height: 640px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(6,182,212,.12) 0%, transparent 68%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: ''; position: absolute; bottom: -100px; left: -80px;
+      width: 400px; height: 400px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(52,211,153,.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+    .hero-copy { position: relative; }
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.4rem, 4.2vw, 3.6rem);
+      font-weight: 800; line-height: 1.1; letter-spacing: -.025em;
+      color: var(--ink); margin-bottom: 22px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: var(--grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-desc { font-size: 1.1rem; color: var(--muted); line-height: 1.75; max-width: 440px; margin-bottom: 40px; }
+
+    /* preview card */
+    .preview-wrap { position: relative; }
+    .preview-card {
+      background: white; border-radius: 20px;
+      box-shadow: var(--shadow-lg); border: 1px solid var(--border-t);
+      overflow: hidden;
+    }
+    .preview-bar {
+      display: flex; align-items: center; gap: 7px;
+      padding: 14px 18px; background: var(--grad);
+    }
+    .preview-bar .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.35); }
+    .preview-bar .title { color: rgba(255,255,255,.92); font-size: .82rem; font-weight: 600; margin-left: 4px; }
+    .preview-body { padding: 20px; }
+    .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 18px; }
+    .stat { background: var(--bg-tint); border-radius: 10px; padding: 13px 10px; text-align: center; }
+    .stat strong {
+      display: block; font-family: 'DM Sans', sans-serif;
+      font-size: 1.45rem; font-weight: 700; font-variant-numeric: tabular-nums;
+      background: var(--grad-dark);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat span { font-size: .7rem; color: var(--muted); font-weight: 500; }
+    .aluno-list { display: flex; flex-direction: column; gap: 7px; }
+    .aluno-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 13px; background: #f8fafc; border-radius: 9px;
+    }
+    .aluno-row .nome { font-size: .83rem; font-weight: 600; color: var(--ink); }
+    .badge { font-size: .75rem; font-weight: 700; padding: 3px 9px; border-radius: 100px; }
+    .badge.g  { background: #d1fae5; color: #065f46; }
+    .badge.t  { background: #cffafe; color: #0e7490; }
+    .badge.y  { background: #fef9c3; color: #92400e; }
+
+    /* FIX #10: chips decorativos com aria-hidden no HTML */
+    .chip {
+      position: absolute;
+      display: flex; align-items: center; gap: 6px;
+      background: white; border: 1px solid var(--border-t);
+      border-radius: 100px; padding: 7px 14px;
+      box-shadow: 0 4px 16px rgba(6,182,212,.12);
+      font-size: .78rem; font-weight: 600; color: var(--slate);
+      animation: float 3.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .chip .dot2 { width: 8px; height: 8px; border-radius: 50%; }
+    .chip-1 { top: -18px; right: -10px; animation-delay: 0s; }
+    .chip-2 { bottom: 28px; left: -20px; animation-delay: 1.2s; }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+    /* ─── COMO FUNCIONA ───────────────────────────────────────── */
+    .how { padding: 100px 0; background: #f8fffe; }
+    .how-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+    .steps { display: flex; flex-direction: column; gap: 0; margin-top: 32px; }
+    .step { display: flex; gap: 20px; padding-bottom: 32px; position: relative; }
+    .step:not(:last-child)::before {
+      content: ''; position: absolute; left: 19px; top: 40px;
+      width: 2px; height: calc(100% - 8px); background: var(--border-t);
+    }
+    .step-num {
+      width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%;
+      background: white; border: 2px solid var(--border-t);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Sans', sans-serif; font-size: .9rem; font-weight: 700;
+      color: var(--cyan-dark); position: relative; z-index: 1;
+      transition: all .2s;
+    }
+    .step:hover .step-num {
+      background: var(--grad); border-color: transparent; color: white;
+      box-shadow: 0 4px 12px rgba(6,182,212,.35);
+    }
+    .step-content h3 {
+      font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+      color: var(--ink); margin-bottom: 6px;
+    }
+    .step-content p { font-size: .9rem; color: var(--muted); line-height: 1.65; }
+
+    .how-visual { background: white; border: 1px solid var(--border-t); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); }
+    .how-visual-header {
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .how-visual-header .icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: var(--bg-tint); display: flex; align-items: center; justify-content: center; font-size: .85rem;
+    }
+    .how-visual-header span { font-size: .85rem; font-weight: 600; color: var(--ink); }
+    .how-visual-body { padding: 18px; }
+    .boletim-row {
+      display: grid; grid-template-columns: 1fr repeat(4,44px) 54px 80px;
+      gap: 8px; align-items: center; padding: 10px 0;
+      border-bottom: 1px solid var(--border); font-size: .78rem;
+    }
+    .boletim-row.header {
+      color: var(--muted); font-weight: 600; font-size: .72rem;
+      letter-spacing: .04em; text-transform: uppercase; padding-bottom: 8px;
+    }
+    .boletim-row .subject { font-weight: 600; color: var(--ink); font-size: .82rem; }
+    .boletim-row .bim { text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .boletim-row .bim.v { color: var(--cyan-dark); font-weight: 600; }
+    .boletim-row .media { text-align: center; font-weight: 700; font-family: 'DM Sans', sans-serif; font-size: .9rem; font-variant-numeric: tabular-nums; }
+    .boletim-row .media.ok   { color: var(--emerald-dk); }
+    .boletim-row .media.warn { color: #92400e; }
+    .status-pill { font-size: .68rem; font-weight: 700; padding: 3px 8px; border-radius: 100px; text-align: center; }
+    .status-pill.ap { background: #d1fae5; color: #065f46; }
+    .status-pill.rc { background: #fef9c3; color: #92400e; }
+
+    /* ─── FUNCIONALIDADES ─────────────────────────────────────── */
+    .features { padding: 100px 0; }
+    .features-header { text-align: center; margin-bottom: 60px; }
+    .features-header .section-sub { max-width: 500px; margin: 14px auto 0; }
+    .grid-features { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+    .f-card {
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 28px; background: white;
+      transition: box-shadow .2s, transform .2s, border-color .2s;
+    }
+    .f-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-5px); border-color: var(--border-t); }
+    .f-icon {
+      width: 46px; height: 46px; border-radius: 11px; margin-bottom: 18px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+    }
+    .f-card h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--ink); margin-bottom: 9px; }
+    .f-card p { font-size: .88rem; color: var(--muted); line-height: 1.65; }
+
+    /* ─── CTA FINAL ───────────────────────────────────────────── */
+    .cta-section { padding: 100px 0; background: #f8fffe; }
+    .cta-box {
+      background: linear-gradient(135deg, #0e7490 0%, #06b6d4 45%, #10b981 100%);
+      border-radius: 24px; padding: 72px 64px;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-box::before {
+      content: ''; position: absolute; top: -120px; right: -100px;
+      width: 360px; height: 360px; border-radius: 50%;
+      background: rgba(255,255,255,.08); pointer-events: none;
+    }
+    .cta-box::after {
+      content: ''; position: absolute; bottom: -80px; left: -60px;
+      width: 240px; height: 240px; border-radius: 50%;
+      background: rgba(255,255,255,.05); pointer-events: none;
+    }
+    .cta-box h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.9rem, 3vw, 2.8rem);
+      font-weight: 800; color: white; line-height: 1.15;
+      margin-bottom: 16px; position: relative;
+    }
+    .cta-box p { font-size: 1.05rem; color: rgba(255,255,255,.78); max-width: 460px; margin: 0 auto 40px; line-height: 1.7; position: relative; }
+    .cta-box .btn { position: relative; }
+    /* FIX #5: foco visível sobre fundo escuro */
+    .cta-box .btn:focus-visible { outline-color: white; }
+
+    /* ─── FOOTER ──────────────────────────────────────────────── */
+    footer { border-top: 1px solid var(--border); padding: 36px 0; }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .footer-nav { display: flex; gap: 20px; }
+    .footer-nav a {
+      font-size: .85rem; color: var(--muted); text-decoration: none; transition: color .15s;
+      /* FIX #8: touch target */
+      padding: 8px 4px; min-height: 44px; display: inline-flex; align-items: center;
+    }
+    .footer-nav a:hover { color: var(--cyan-dark); }
+    footer small { font-size: .82rem; color: var(--muted); }
+
+    /* ─── Scroll animations ───────────────────────────────────── */
+    /* FIX: respeita prefers-reduced-motion */
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal { opacity: 0; transform: translateY(22px); transition: opacity .55s ease, transform .55s ease; }
+      .reveal.in { opacity: 1; transform: translateY(0); }
+      @keyframes fadeUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+      .anim-1 { animation: fadeUp .6s .05s ease both; }
+      .anim-2 { animation: fadeUp .6s .15s ease both; }
+      .anim-3 { animation: fadeUp .6s .25s ease both; }
+      .anim-4 { animation: fadeUp .6s .35s ease both; }
+      @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+    }
+    /* Sem animação para quem prefere menos movimento */
+    @media (prefers-reduced-motion: reduce) {
+      .chip { animation: none; }
+    }
+
+    /* ─── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 920px) {
+      .hero-inner, .how-inner { grid-template-columns: 1fr; gap: 48px; }
+      .preview-wrap { order: -1; }
+      .grid-features { grid-template-columns: repeat(2,1fr); }
+      .nav-links { display: none; }
+      .hamburger { display: inline-flex; }
+      /* FIX #8: touch targets maiores no mobile */
+      .nav-links a { padding: 12px 16px; min-height: 44px; display: flex; align-items: center; }
+    }
+    @media (max-width: 600px) {
+      .grid-features { grid-template-columns: 1fr; }
+      .cta-box { padding: 48px 28px; }
+      .boletim-row { grid-template-columns: 1fr repeat(2,44px) 52px; }
+      .boletim-row .bim:nth-child(4), .boletim-row .bim:nth-child(5) { display: none; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- FIX #2: Skip link para usuários de teclado (WCAG 2.4.1) -->
+  <a href="#conteudo-principal" class="skip-link">Pular para o conteúdo principal</a>
+
+  <!-- FIX #6: aria-label distingue navs para leitores de tela -->
+  <nav aria-label="Navegação principal">
+    <div class="container">
+      <div class="nav-inner">
+
+        <a href="#" class="logo" aria-label="Kadu — página inicial">
+          <div class="logo-mark" aria-hidden="true">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="25" y="15" width="14" height="70" rx="7" fill="white"/>
+              <path d="M 39 45 L 70 20 L 80 28 L 75 33 L 50 53 L 39 50 Z" fill="white"/>
+              <path d="M 39 55 L 50 47 L 75 67 L 80 72 L 70 80 L 39 50 Z" fill="white"/>
+            </svg>
+          </div>
+          <span class="logo-text">Kadu</span>
+        </a>
+
+        <ul class="nav-links" id="nav-menu" role="list">
+          <li><a href="#como-funciona">Como funciona</a></li>
+          <li><a href="#funcionalidades">Funcionalidades</a></li>
+        </ul>
+
+        <a href="https://SEU-APP.azurestaticapps.net/login" class="btn btn-sm btn-primary">
+          <!-- FIX #4: aria-hidden em ícone decorativo dentro de botão com texto -->
+          <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Acessar o Sistema
+        </a>
+
+        <!-- FIX #8: min 44x44px; aria-expanded comunica estado do menu -->
+        <button
+          class="hamburger"
+          onclick="toggleNav()"
+          aria-label="Abrir menu"
+          aria-expanded="false"
+          aria-controls="nav-menu">
+          <svg aria-hidden="true" focusable="false" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+
+      </div>
+    </div>
+  </nav>
+
+  <!-- FIX #1: <main> com id para o skip link -->
+  <main id="conteudo-principal">
+
+    <!-- HERO -->
+    <section class="hero" aria-labelledby="hero-titulo">
+      <div class="container">
+        <div class="hero-inner">
+
+          <div class="hero-copy">
+            <div class="tag" aria-hidden="true">Portal do Professor</div>
+            <h1 id="hero-titulo" class="anim-2">
+              Gestão escolar<br/>
+              <em>simples do início<br/>ao boletim</em>
+            </h1>
+            <p class="hero-desc anim-3">
+              O Kadu centraliza tudo que um professor precisa: cadastre turmas, gerencie alunos, lance notas bimestrais e gere boletins — tudo em um único portal.
+            </p>
+            <div class="anim-4" style="display:flex; gap:12px; flex-wrap:wrap;">
+              <a href="https://SEU-APP.azurestaticapps.net/login" class="btn btn-md btn-primary">
+                <svg aria-hidden="true" focusable="false" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+                Acessar o Sistema
+              </a>
+              <a href="#funcionalidades" class="btn btn-md btn-outline">Ver funcionalidades</a>
+            </div>
+          </div>
+
+          <div class="preview-wrap anim-3">
+            <!-- FIX #10: chips puramente decorativos marcados como aria-hidden -->
+            <div class="chip chip-1" aria-hidden="true">
+              <div class="dot2" style="background:#10b981;"></div>
+              8 alunos aprovados
+            </div>
+            <div class="chip chip-2" aria-hidden="true">
+              <div class="dot2" style="background:#06b6d4;"></div>
+              Boletim gerado ✓
+            </div>
+
+            <!-- Preview decorativo — aria-hidden pois é ilustração, não dado real -->
+            <div class="preview-card" aria-hidden="true">
+              <div class="preview-bar">
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                <span class="title">Dashboard — Kadu</span>
+              </div>
+              <div class="preview-body">
+                <div class="stats-row">
+                  <div class="stat"><strong>4</strong><span>Turmas</span></div>
+                  <div class="stat"><strong>28</strong><span>Alunos</span></div>
+                  <div class="stat"><strong>8.4</strong><span>Média</span></div>
+                </div>
+                <div class="aluno-list">
+                  <div class="aluno-row"><span class="nome">Ana Paula Silva</span><span class="badge g">9.2</span></div>
+                  <div class="aluno-row"><span class="nome">Carlos Eduardo</span><span class="badge t">7.8</span></div>
+                  <div class="aluno-row"><span class="nome">Gabriela Rocha</span><span class="badge g">8.5</span></div>
+                  <div class="aluno-row"><span class="nome">Rafael Mendes</span><span class="badge y">6.1</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- COMO FUNCIONA -->
+    <section class="how" id="como-funciona" aria-labelledby="como-funciona-titulo">
+      <div class="container">
+        <div class="how-inner">
+
+          <div class="reveal">
+            <div class="tag" aria-hidden="true">Como funciona</div>
+            <h2 class="section-title" id="como-funciona-titulo">Do cadastro ao boletim em poucos passos</h2>
+            <p class="section-sub">Uma plataforma pensada para eliminar o retrabalho e deixar o professor com mais tempo para o que importa.</p>
+
+            <!-- FIX: ol semântico para lista numerada de passos -->
+            <ol class="steps" aria-label="Passos para usar o Kadu">
+              <li class="step">
+                <div class="step-num" aria-hidden="true">1</div>
+                <div class="step-content">
+                  <h3>Crie suas turmas</h3>
+                  <p>Cadastre as turmas por disciplina, série e período. O código da turma é gerado automaticamente.</p>
+                </div>
+              </li>
+              <li class="step">
+                <div class="step-num" aria-hidden="true">2</div>
+                <div class="step-content">
+                  <h3>Adicione os alunos</h3>
+                  <p>Cadastre cada aluno e vincule a uma ou mais turmas. A matrícula serve como identificador único.</p>
+                </div>
+              </li>
+              <li class="step">
+                <div class="step-num" aria-hidden="true">3</div>
+                <div class="step-content">
+                  <h3>Lance as notas bimestrais</h3>
+                  <p>Informe as notas de cada bimestre por aluno. O sistema calcula a média e o status automaticamente.</p>
+                </div>
+              </li>
+              <li class="step">
+                <div class="step-num" aria-hidden="true">4</div>
+                <div class="step-content">
+                  <h3>Gere e imprima o boletim</h3>
+                  <p>Acesse o boletim completo de qualquer aluno, com todas as disciplinas e médias, pronto para impressão.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+
+          <!-- Boletim de exemplo — decorativo, aria-hidden -->
+          <div class="reveal" style="transition-delay:.1s;">
+            <div class="how-visual" aria-hidden="true">
+              <div class="how-visual-header">
+                <div class="icon">📄</div>
+                <span>Boletim Escolar — Ana Paula Silva</span>
+              </div>
+              <div class="how-visual-body">
+                <div class="boletim-row header">
+                  <span>Matéria</span>
+                  <span style="text-align:center">1º</span><span style="text-align:center">2º</span>
+                  <span style="text-align:center">3º</span><span style="text-align:center">4º</span>
+                  <span style="text-align:center">Média</span><span style="text-align:center">Status</span>
+                </div>
+                <div class="boletim-row">
+                  <span class="subject">Matemática</span>
+                  <span class="bim v">9.0</span><span class="bim v">8.5</span><span class="bim v">9.2</span><span class="bim v">9.5</span>
+                  <span class="media ok">9.1</span><span class="status-pill ap">Aprovado</span>
+                </div>
+                <div class="boletim-row">
+                  <span class="subject">Português</span>
+                  <span class="bim v">7.5</span><span class="bim v">8.0</span><span class="bim v">7.0</span><span class="bim v">8.5</span>
+                  <span class="media ok">7.8</span><span class="status-pill ap">Aprovado</span>
+                </div>
+                <div class="boletim-row">
+                  <span class="subject">Ciências</span>
+                  <span class="bim v">6.0</span><span class="bim v">5.5</span><span class="bim v">6.5</span><span class="bim v">6.0</span>
+                  <span class="media warn">6.0</span><span class="status-pill rc">Recuperação</span>
+                </div>
+                <div class="boletim-row">
+                  <span class="subject">História</span>
+                  <span class="bim v">8.0</span><span class="bim v">8.5</span><span class="bim v">9.0</span><span class="bim v">8.0</span>
+                  <span class="media ok">8.4</span><span class="status-pill ap">Aprovado</span>
+                </div>
+                <div class="boletim-row" style="border:none">
+                  <span class="subject">Geografia</span>
+                  <span class="bim v">7.5</span><span class="bim v">7.0</span><span class="bim v">8.0</span><span class="bim v">7.5</span>
+                  <span class="media ok">7.5</span><span class="status-pill ap">Aprovado</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- FUNCIONALIDADES -->
+    <section class="features" id="funcionalidades" aria-labelledby="funcionalidades-titulo">
+      <div class="container">
+        <div class="features-header reveal">
+          <div class="tag" aria-hidden="true">Funcionalidades</div>
+          <h2 class="section-title" id="funcionalidades-titulo">Tudo que você precisa, nada que não precisa</h2>
+          <p class="section-sub">O Kadu foi construído para ser direto ao ponto — sem abas desnecessárias, sem curva de aprendizado.</p>
+        </div>
+        <div class="grid-features">
+
+          <div class="f-card reveal">
+            <!-- FIX #3: aria-hidden em emojis decorativos -->
+            <div class="f-icon" aria-hidden="true" style="background:#ecfeff;">📚</div>
+            <h3>Gestão de Turmas</h3>
+            <p>Crie turmas por disciplina, série e período. Visualize quantidade de alunos e média da turma em tempo real.</p>
+          </div>
+          <div class="f-card reveal" style="transition-delay:.07s;">
+            <div class="f-icon" aria-hidden="true" style="background:#f0fdf4;">👨‍🎓</div>
+            <h3>Cadastro de Alunos</h3>
+            <p>Cadastre alunos e vincule a múltiplas turmas. Acesse o perfil completo com histórico de notas a qualquer momento.</p>
+          </div>
+          <div class="f-card reveal" style="transition-delay:.14s;">
+            <div class="f-icon" aria-hidden="true" style="background:#f0fdfa;">✏️</div>
+            <h3>Lançamento de Notas</h3>
+            <p>Lance notas bimestrais por aluno. O sistema calcula a média e exibe o status de aprovação automaticamente.</p>
+          </div>
+          <div class="f-card reveal" style="transition-delay:.21s;">
+            <div class="f-icon" aria-hidden="true" style="background:#ecfeff;">📄</div>
+            <h3>Boletim Escolar</h3>
+            <p>Gere o boletim completo de cada aluno com todas as disciplinas, médias por bimestre e status final. Pronto para impressão.</p>
+          </div>
+          <div class="f-card reveal" style="transition-delay:.28s;">
+            <div class="f-icon" aria-hidden="true" style="background:#f0fdf4;">📊</div>
+            <h3>Dashboard</h3>
+            <p>Visão geral com gráficos de distribuição de notas, atividades pendentes e taxa de presença por turma.</p>
+          </div>
+          <div class="f-card reveal" style="transition-delay:.35s;">
+            <div class="f-icon" aria-hidden="true" style="background:#ecfeff;">🔐</div>
+            <h3>Acesso Seguro</h3>
+            <p>Login com e-mail e senha, sessão protegida com token JWT. Cada professor acessa apenas seus próprios dados.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="cta-section" aria-labelledby="cta-titulo">
+      <div class="container">
+        <div class="cta-box reveal">
+          <h2 id="cta-titulo">Pronto para simplificar<br/>sua gestão escolar?</h2>
+          <p>Acesse o portal agora mesmo. Faça login e comece a cadastrar suas turmas e alunos em minutos.</p>
+          <a href="https://SEU-APP.azurestaticapps.net/login" class="btn btn-md btn-white">
+            <svg aria-hidden="true" focusable="false" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+            Acessar o Sistema
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FIX #6: aria-label no footer nav -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <a href="#" class="logo" aria-label="Kadu — voltar ao topo">
+          <div class="logo-mark" style="width:30px;height:30px;" aria-hidden="true">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="25" y="15" width="14" height="70" rx="7" fill="white"/>
+              <path d="M 39 45 L 70 20 L 80 28 L 75 33 L 50 53 L 39 50 Z" fill="white"/>
+              <path d="M 39 55 L 50 47 L 75 67 L 80 72 L 70 80 L 39 50 Z" fill="white"/>
+            </svg>
+          </div>
+          <span class="logo-text" aria-hidden="true">Kadu</span>
+        </a>
+        <nav aria-label="Navegação do rodapé">
+          <ul class="footer-nav" role="list" style="list-style:none;">
+            <li><a href="#como-funciona">Como funciona</a></li>
+            <li><a href="#funcionalidades">Funcionalidades</a></li>
+            <li><a href="https://SEU-APP.azurestaticapps.net/login" target="_blank" rel="noopener noreferrer">
+              Acessar Sistema
+              <span class="sr-only">(abre em nova aba)</span>
+            </a></li>
+          </ul>
+        </nav>
+        <small>© 2026 Kadu. Todos os direitos reservados.</small>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Classe utilitária para texto apenas para leitores de tela -->
+  <style>
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+    /* Remove list styling mantendo semântica */
+    ol.steps { list-style: none; padding: 0; }
+  </style>
+
+  <script>
+    // FIX #9: gerenciamento de foco e aria-expanded no menu mobile
+    function toggleNav() {
+      const ul  = document.getElementById('nav-menu')
+      const btn = document.querySelector('.hamburger')
+      const isOpen = ul.style.display === 'flex'
+
+      if (isOpen) {
+        ul.style.cssText = ''
+        btn.setAttribute('aria-expanded', 'false')
+        btn.setAttribute('aria-label', 'Abrir menu')
+        btn.focus()
+      } else {
+        ul.style.cssText = 'display:flex;flex-direction:column;position:absolute;top:64px;left:0;right:0;background:#fff;border-bottom:1px solid #e2e8f0;padding:12px 24px;gap:2px;z-index:99;'
+        btn.setAttribute('aria-expanded', 'true')
+        btn.setAttribute('aria-label', 'Fechar menu')
+        // FIX #9: foco vai para o primeiro item do menu
+        ul.querySelector('a')?.focus()
+      }
+    }
+
+    // Fecha menu ao clicar num link e devolve foco ao botão
+    document.querySelectorAll('#nav-menu a').forEach(a =>
+      a.addEventListener('click', () => {
+        const ul  = document.getElementById('nav-menu')
+        const btn = document.querySelector('.hamburger')
+        ul.style.cssText = ''
+        btn.setAttribute('aria-expanded', 'false')
+        btn.setAttribute('aria-label', 'Abrir menu')
+      })
+    )
+
+    // Fecha menu com Escape
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        const ul  = document.getElementById('nav-menu')
+        const btn = document.querySelector('.hamburger')
+        if (ul.style.display === 'flex') {
+          ul.style.cssText = ''
+          btn.setAttribute('aria-expanded', 'false')
+          btn.setAttribute('aria-label', 'Abrir menu')
+          btn.focus()
+        }
+      }
+    })
+
+    // Scroll reveal respeitando prefers-reduced-motion
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (!prefersReduced) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } })
+      }, { threshold: 0.1 })
+      document.querySelectorAll('.reveal').forEach(el => io.observe(el))
+    }
+  </script>
+
+</body>
+</html>
