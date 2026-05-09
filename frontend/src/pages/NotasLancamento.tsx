@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { ArrowLeft, Save, User, BookOpen, TrendingUp } from 'lucide-react'
+import { toast } from 'sonner'
 import { api } from '../lib/api'
 
 interface NotasBimestre { bimestre1: string; bimestre2: string; bimestre3: string; bimestre4: string }
@@ -21,7 +22,6 @@ function corNota(nota: number) {
 export default function NotasLancamento() {
   const navigate = useNavigate()
   const { turmaId, alunoId } = useParams()
-
   const [turma,  setTurma]  = useState<Turma | null>(null)
   const [aluno,  setAluno]  = useState<Aluno | null>(null)
   const [notas,  setNotas]  = useState<NotasBimestre>({ bimestre1: '', bimestre2: '', bimestre3: '', bimestre4: '' })
@@ -46,7 +46,8 @@ export default function NotasLancamento() {
         bimestre3: n.bimestre3 != null ? String(n.bimestre3) : '',
         bimestre4: n.bimestre4 != null ? String(n.bimestre4) : '',
       })
-    }).finally(() => setLoading(false))
+    }).catch(() => setErro('Erro ao carregar dados. Tente novamente.'))
+    .finally(() => setLoading(false))
   }, [turmaId, alunoId])
 
   const calcularMedia = () => {
@@ -57,7 +58,6 @@ export default function NotasLancamento() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setErro('')
     setCarregando(true)
     try {
       await api.post('/notas', {
@@ -68,15 +68,27 @@ export default function NotasLancamento() {
         bimestre3: notas.bimestre3 !== '' ? parseFloat(notas.bimestre3) : null,
         bimestre4: notas.bimestre4 !== '' ? parseFloat(notas.bimestre4) : null,
       })
+      toast.success('Notas salvas com sucesso!')
       navigate(`/notas/turma/${turmaId}`)
     } catch (e: unknown) {
-      setErro(e instanceof Error ? e.message : 'Erro ao salvar')
+      toast.error(e instanceof Error ? e.message : 'Erro ao salvar notas')
     } finally {
       setCarregando(false)
     }
   }
 
   if (loading) return <div className="flex justify-center py-20 text-gray-400">Carregando...</div>
+
+  if (erro) return (
+    <div className="space-y-6">
+      <Button variant="ghost" size="icon" onClick={() => navigate('/notas')}><ArrowLeft className="w-5 h-5" /></Button>
+      <div className="text-center py-12">
+        <p className="text-red-500 mb-4">{erro}</p>
+        <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+      </div>
+    </div>
+  )
+
   if (!turma || !aluno) return (
     <div className="space-y-6">
       <Button variant="ghost" size="icon" onClick={() => navigate('/notas')}><ArrowLeft className="w-5 h-5" /></Button>
@@ -98,8 +110,6 @@ export default function NotasLancamento() {
           <p className="text-gray-500 mt-1">{turma.nome} • {aluno.nome}</p>
         </div>
       </div>
-
-      {erro && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">{erro}</div>}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
@@ -136,7 +146,6 @@ export default function NotasLancamento() {
         </Card>
       </div>
 
-      {/* Seleção de bimestre */}
       <Card>
         <CardHeader><CardTitle>Selecione o Bimestre</CardTitle></CardHeader>
         <CardContent>
@@ -144,9 +153,7 @@ export default function NotasLancamento() {
             {['1','2','3','4'].map(bim => (
               <button key={bim} type="button" onClick={() => setBimSelecionado(bim)}
                 className={`p-4 rounded-lg border-2 font-medium transition-all ${
-                  bimSelecionado === bim
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300'
+                  bimSelecionado === bim ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300'
                 }`}>
                 {bim}º Bimestre
               </button>

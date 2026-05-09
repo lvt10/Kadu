@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
-import { Plus, Users, TrendingUp } from 'lucide-react'
+import { Plus, Users, TrendingUp, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { api } from '../lib/api'
 
 interface Turma {
@@ -14,16 +15,37 @@ interface Turma {
 
 export default function Turmas() {
   const navigate = useNavigate()
-  const [turmas, setTurmas] = useState<Turma[]>([])
+  const [turmas,  setTurmas]  = useState<Turma[]>([])
   const [carregando, setCarregando] = useState(true)
+  const [erro, setErro] = useState('')
 
   useEffect(() => {
     api.get<Turma[]>('/turmas')
       .then(setTurmas)
+      .catch(() => setErro('Erro ao carregar turmas. Tente novamente.'))
       .finally(() => setCarregando(false))
   }, [])
 
+  const handleDeletar = async (e: React.MouseEvent, turma: Turma) => {
+    e.stopPropagation()
+    if (!window.confirm(`Tem certeza que deseja excluir a turma "${turma.nome}"? Esta ação não pode ser desfeita.`)) return
+    try {
+      await api.delete(`/turmas/${turma.id}`)
+      setTurmas(prev => prev.filter(t => t.id !== turma.id))
+      toast.success('Turma excluída com sucesso!')
+    } catch {
+      toast.error('Erro ao excluir turma. Tente novamente.')
+    }
+  }
+
   if (carregando) return <div className="flex justify-center py-20 text-gray-400">Carregando...</div>
+
+  if (erro) return (
+    <div className="text-center py-20">
+      <p className="text-red-500 mb-4">{erro}</p>
+      <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
@@ -50,7 +72,13 @@ export default function Turmas() {
                     <p className="text-sm text-gray-500 mt-1">{turma.disciplina}</p>
                   </div>
                 </div>
-                <Badge variant="secondary">{turma.periodo}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{turma.periodo}</Badge>
+                  <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={e => handleDeletar(e, turma)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -74,46 +102,6 @@ export default function Turmas() {
           </Card>
         ))}
       </div>
-
-      {turmas.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle>Visão Geral de Desempenho</CardTitle></CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Turma</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Período</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Alunos</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Média</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {turmas.map(turma => (
-                    <tr key={turma.id} className="border-b hover:bg-gray-50 cursor-pointer"
-                      onClick={() => navigate(`/turmas/${turma.id}`)}>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${turma.cor || 'bg-blue-500'}`} />
-                          <span className="font-medium">{turma.nome}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-gray-600">{turma.periodo}</td>
-                      <td className="py-3 px-4 text-gray-600">{turma.qtdAlunos}</td>
-                      <td className="py-3 px-4">
-                        <span className={`font-medium ${turma.media >= 7 ? 'text-green-600' : 'text-orange-600'}`}>
-                          {turma.media.toFixed(1)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {turmas.length === 0 && (
         <Card>

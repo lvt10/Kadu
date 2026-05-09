@@ -6,7 +6,8 @@ import { Input } from '../components/ui/input'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
 import { Badge } from '../components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
-import { Search, Plus, FileText } from 'lucide-react'
+import { Search, Plus, FileText, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { api } from '../lib/api'
 
 interface Turma { id: string; nome: string }
@@ -19,12 +20,26 @@ export default function Alunos() {
   const [busca,   setBusca]   = useState('')
   const [turmaFiltro, setTurmaFiltro] = useState('todas')
   const [loading, setLoading] = useState(true)
+  const [erro,    setErro]    = useState('')
 
   useEffect(() => {
     Promise.all([api.get<Aluno[]>('/alunos'), api.get<Turma[]>('/turmas')])
       .then(([a, t]) => { setAlunos(a); setTurmas(t) })
+      .catch(() => setErro('Erro ao carregar alunos. Tente novamente.'))
       .finally(() => setLoading(false))
   }, [])
+
+  const handleDeletar = async (e: React.MouseEvent, aluno: Aluno) => {
+    e.stopPropagation()
+    if (!window.confirm(`Tem certeza que deseja excluir o aluno "${aluno.nome}"? Esta ação não pode ser desfeita.`)) return
+    try {
+      await api.delete(`/alunos/${aluno.id}`)
+      setAlunos(prev => prev.filter(a => a.id !== aluno.id))
+      toast.success('Aluno excluído com sucesso!')
+    } catch {
+      toast.error('Erro ao excluir aluno. Tente novamente.')
+    }
+  }
 
   const filtrados = alunos.filter(a => {
     const q = busca.toLowerCase()
@@ -36,6 +51,13 @@ export default function Alunos() {
   const iniciais = (nome: string) => nome.split(' ').map(n => n[0]).join('').toUpperCase()
 
   if (loading) return <div className="flex justify-center py-20 text-gray-400">Carregando...</div>
+
+  if (erro) return (
+    <div className="text-center py-20">
+      <p className="text-red-500 mb-4">{erro}</p>
+      <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
@@ -84,6 +106,10 @@ export default function Alunos() {
                     <CardTitle className="text-lg truncate">{aluno.nome}</CardTitle>
                     <p className="text-sm text-gray-500 mt-1">Matrícula: {aluno.matricula}</p>
                   </div>
+                  <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                    onClick={e => handleDeletar(e, aluno)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -112,7 +138,7 @@ export default function Alunos() {
       {filtrados.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-gray-500">Nenhum aluno encontrado com os critérios informados</p>
+            <p className="text-gray-500">Nenhum aluno encontrado</p>
           </CardContent>
         </Card>
       )}
