@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.db
+*.db-shm
+*.db-wal
+backend/backend.zip
+.env.local
+.env.production
