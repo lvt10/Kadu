@@ -27,8 +27,9 @@ router.post('/', auth, (req, res) => {
 router.get('/:id', auth, (req, res) => {
   const turma = repo.findById(req.params.id)
   if (!turma) return res.status(404).json({ erro: 'Turma não encontrada' })
+// Troque mediaAluno por mediaAlunoPorTurma
   const alunos = repo.findAlunosByTurma(req.params.id)
-    .map(a => ({ ...a, mediaNotas: NotaService.mediaAluno(a.id) }))
+    .map(a => ({ ...a, mediaNotas: NotaService.mediaAlunoPorTurma(a.id, req.params.id) }))
   res.json({ ...turma, media: NotaService.mediaTurma(req.params.id), alunos })
 })
 

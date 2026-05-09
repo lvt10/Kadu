@@ -1,5 +1,4 @@
 'use strict'
-// routes/alunos.js
 const router      = require('express').Router()
 const auth        = require('../middleware/auth')
 const repo        = require('../repositories/AlunoRepository')
@@ -9,7 +8,10 @@ const { randomUUID } = require('crypto')
 router.get('/', auth, (req, res) => {
   const { turmaId } = req.query
   const alunos = turmaId ? repo.findByTurma(turmaId) : repo.findAll()
-  res.json(alunos.map(a => ({ ...a, mediaNotas: NotaService.mediaAluno(a.id) })))
+  res.json(alunos.map(a => ({
+    ...a,
+    mediaNotas: turmaId ? NotaService.mediaAlunoPorTurma(a.id, turmaId) : 0
+  })))
 })
 
 router.post('/', auth, (req, res) => {

@@ -61,7 +61,7 @@ export default function NotasListaAlunos() {
         <CardContent>
           <div className="space-y-2">
             {turma.alunos.map(aluno => {
-              const media = aluno.mediaNotas / 10  // escala 0-100 → 0-10
+              const media = aluno.mediaNotas  // escala 0-100 → 0-10
               return (
                 <div key={aluno.id}
                   onClick={() => navigate(`/notas/turma/${turmaId}/aluno/${aluno.id}`)}
