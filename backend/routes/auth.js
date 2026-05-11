@@ -43,7 +43,7 @@ router.post('/registro/enviar-codigo', async (req, res) => {
     .run(email, codigo, nome, hash, expira_em)
 
   await resend.emails.send({
-    from:    'Kadu <noreply@seudominio.com>',
+    from:    'Kadu <onboarding@resend.dev>',
     to:      email,
     subject: 'Código de verificação — Kadu',
     html:    emailVerificacao(nome, codigo),
@@ -96,7 +96,7 @@ router.post('/esqueci-senha', async (req, res) => {
   db.prepare('UPDATE professores SET senha_hash = ? WHERE email = ?').run(hash, email)
 
   await resend.emails.send({
-    from:    'Kadu <noreply@seudominio.com>',
+    from:    'Kadu <onboarding@resend.dev>',
     to:      email,
     subject: 'Sua nova senha temporária — Kadu',
     html:    emailSenhaTemporaria(prof.nome, senhaTemp),
