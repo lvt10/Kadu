@@ -1,21 +1,28 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, Link } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Button } from '../components/ui/button'
 import { Label } from '../components/ui/label'
-import { Mail, Lock, AlertCircle } from 'lucide-react'
+import { Mail, Lock, AlertCircle, CheckCircle, X } from 'lucide-react'
 import { Checkbox } from '../components/ui/checkbox'
 import { Logo } from '../components/Logo'
 import { api } from '../lib/api'
 
 export default function Login() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
-  const [lembrarMe, setLembrarMe] = useState(false)
-  const [erro, setErro] = useState('')
+  const [email,      setEmail]      = useState('')
+  const [senha,      setSenha]      = useState('')
+  const [lembrarMe,  setLembrarMe]  = useState(false)
+  const [erro,       setErro]       = useState('')
   const [carregando, setCarregando] = useState(false)
+
+  // Esqueci senha
+  const [modalAberto,   setModalAberto]   = useState(false)
+  const [emailReset,    setEmailReset]    = useState('')
+  const [erroReset,     setErroReset]     = useState('')
+  const [successReset,  setSuccessReset]  = useState(false)
+  const [loadingReset,  setLoadingReset]  = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,8 +30,7 @@ export default function Login() {
     setCarregando(true)
     try {
       const data = await api.post<{ token: string; professor: { id: number; nome: string; email: string } }>(
-        '/auth/login',
-        { email, senha }
+        '/auth/login', { email, senha }
       )
       localStorage.setItem('token', data.token)
       localStorage.setItem('professorAuth', 'autenticado')
@@ -37,6 +43,27 @@ export default function Login() {
     } finally {
       setCarregando(false)
     }
+  }
+
+  const handleEsqueciSenha = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setErroReset('')
+    setLoadingReset(true)
+    try {
+      await api.post('/auth/esqueci-senha', { email: emailReset })
+      setSuccessReset(true)
+    } catch (e: unknown) {
+      setErroReset(e instanceof Error ? e.message : 'Erro ao enviar email')
+    } finally {
+      setLoadingReset(false)
+    }
+  }
+
+  const fecharModal = () => {
+    setModalAberto(false)
+    setEmailReset('')
+    setErroReset('')
+    setSuccessReset(false)
   }
 
   return (
@@ -60,43 +87,43 @@ export default function Login() {
                   <p className="text-sm text-red-600">{erro}</p>
                 </div>
               )}
-
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input id="email" type="email" placeholder="professor@escola.edu.br"
                     value={email} onChange={e => setEmail(e.target.value)} className="pl-10" required />
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="senha">Senha</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input id="senha" type="password" placeholder="••••••••"
                     value={senha} onChange={e => setSenha(e.target.value)} className="pl-10" required />
                 </div>
               </div>
-
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Checkbox id="lembrar" checked={lembrarMe}
                     onCheckedChange={checked => setLembrarMe(checked as boolean)} />
                   <Label htmlFor="lembrar" className="text-sm font-normal cursor-pointer">Lembrar-me</Label>
                 </div>
+                <Button type="button" variant="link" className="h-auto p-0 text-sm text-blue-600"
+                  onClick={() => setModalAberto(true)}>
+                  Esqueci minha senha
+                </Button>
               </div>
-
               <Button type="submit" className="w-full" disabled={carregando}>
                 {carregando ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
 
-            <div className="mt-6 pt-6 border-t">
-              <p className="text-center text-sm text-gray-600">
-                Precisa de ajuda?{' '}
-                <Button variant="link" className="h-auto p-0 text-sm">Contate o Suporte de TI</Button>
-              </p>
+            <div className="mt-6 pt-4 border-t text-center text-sm text-gray-600">
+              Não tem conta?{' '}
+              <Link to="/registro" className="text-blue-600 font-medium hover:underline">
+                Criar conta
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -115,6 +142,70 @@ export default function Login() {
           <p>© 2026 Kadu. Todos os direitos reservados.</p>
         </div>
       </div>
+
+      {/* Modal Esqueci Senha */}
+      {modalAberto && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md shadow-2xl">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Esqueci minha senha</CardTitle>
+                  <CardDescription className="mt-1">
+                    Digite seu email e enviaremos uma senha temporária
+                  </CardDescription>
+                </div>
+                <Button variant="ghost" size="icon" onClick={fecharModal}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {successReset ? (
+                <div className="text-center py-4 space-y-4">
+                  <div className="flex justify-center">
+                    <CheckCircle className="w-16 h-16 text-green-500" />
+                  </div>
+                  <p className="font-semibold text-gray-900">Email enviado!</p>
+                  <p className="text-sm text-gray-500">
+                    Enviamos uma senha temporária para <strong>{emailReset}</strong>.
+                    Verifique sua caixa de entrada.
+                  </p>
+                  <Button className="w-full" onClick={fecharModal}>
+                    Voltar para o login
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleEsqueciSenha} className="space-y-4">
+                  {erroReset && (
+                    <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                      <p className="text-sm text-red-600">{erroReset}</p>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="email-reset">E-mail cadastrado</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input id="email-reset" type="email" placeholder="professor@escola.edu.br"
+                        value={emailReset} onChange={e => setEmailReset(e.target.value)}
+                        className="pl-10" required />
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button type="button" variant="outline" className="flex-1" onClick={fecharModal}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit" className="flex-1" disabled={loadingReset}>
+                      {loadingReset ? 'Enviando...' : 'Enviar senha'}
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

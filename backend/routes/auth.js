@@ -105,3 +105,40 @@ router.get('/me', auth, (req, res) => {
 })
 
 module.exports = router
+
+// Esqueci minha senha — gera senha temporária e envia por email
+router.post('/esqueci-senha', async (req, res) => {
+  const { email } = req.body
+  if (!email) return res.status(400).json({ erro: 'Email obrigatório' })
+
+  const prof = ProfessorRepository.findByEmail(email)
+  if (!prof) return res.status(404).json({ erro: 'Email não encontrado' })
+
+  // Gera senha temporária
+  const senhaTemp = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase()
+  const hash = bcrypt.hashSync(senhaTemp, 10)
+
+  // Atualiza no banco
+  db.prepare('UPDATE professores SET senha_hash = ? WHERE email = ?').run(hash, email)
+
+  // Envia por email
+  await resend.emails.send({
+    from:    'Kadu <noreply@seudominio.com>',
+    to:      email,
+    subject: 'Sua nova senha temporária — Kadu',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
+        <h2 style="color:#0e7490;">Redefinição de Senha</h2>
+        <p>Olá, <strong>${prof.nome}</strong>!</p>
+        <p>Sua senha temporária é:</p>
+        <div style="background:#ecfeff;border:2px solid #06b6d4;border-radius:12px;padding:24px;text-align:center;margin:24px 0;">
+          <span style="font-size:28px;font-weight:800;letter-spacing:4px;color:#0e7490;">${senhaTemp}</span>
+        </div>
+        <p style="color:#64748b;font-size:14px;">Acesse o sistema com essa senha e altere-a depois.</p>
+        <p style="color:#64748b;font-size:14px;">Se você não solicitou isso, entre em contato com o suporte.</p>
+      </div>
+    `,
+  })
+
+  res.json({ mensagem: 'Senha temporária enviada para o email' })
+})
