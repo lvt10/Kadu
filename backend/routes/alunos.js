@@ -7,7 +7,7 @@ const { randomUUID } = require('crypto')
 
 router.get('/', auth, (req, res) => {
   const { turmaId } = req.query
-  const alunos = turmaId ? repo.findByTurma(turmaId) : repo.findAll()
+  const alunos = turmaId ? repo.findByTurma(turmaId) : repo.findAll(req.user.id)
   res.json(alunos.map(a => ({
     ...a,
     mediaNotas: turmaId ? NotaService.mediaAlunoPorTurma(a.id, turmaId) : 0

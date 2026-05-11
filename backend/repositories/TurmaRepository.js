@@ -1,27 +1,26 @@
 'use strict'
-// repositories/TurmaRepository.js
-
 const { db, plain, plainAll } = require('../db/connection')
 
 const TurmaRepository = {
-  findAll() {
+  findAll(professorId) {
     return plainAll(db.prepare(`
       SELECT t.*, COUNT(at.aluno_id) AS qtdAlunos
       FROM turmas t
       LEFT JOIN aluno_turma at ON at.turma_id = t.id
+      WHERE t.professor_id = ?
       GROUP BY t.id
       ORDER BY t.created_at DESC
-    `).all())
+    `).all(professorId))
   },
 
-  findById(id) {
+  findById(id, professorId) {
     return plain(db.prepare(`
       SELECT t.*, COUNT(at.aluno_id) AS qtdAlunos
       FROM turmas t
       LEFT JOIN aluno_turma at ON at.turma_id = t.id
-      WHERE t.id = ?
+      WHERE t.id = ? AND t.professor_id = ?
       GROUP BY t.id
-    `).get(id))
+    `).get(id, professorId))
   },
 
   findAlunosByTurma(turmaId) {
@@ -41,8 +40,8 @@ const TurmaRepository = {
     return plain(db.prepare('SELECT * FROM turmas WHERE id = ?').get(id))
   },
 
-  delete(id) {
-    return db.prepare('DELETE FROM turmas WHERE id = ?').run(id).changes
+  delete(id, professorId) {
+    return db.prepare('DELETE FROM turmas WHERE id = ? AND professor_id = ?').run(id, professorId).changes
   },
 }
 

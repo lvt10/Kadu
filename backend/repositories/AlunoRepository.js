@@ -1,15 +1,21 @@
 'use strict'
-// repositories/AlunoRepository.js
-
 const { db, plain, plainAll, transacao } = require('../db/connection')
 
 const AlunoRepository = {
-  findAll() {
+  // Retorna alunos apenas das turmas do professor
+  findAll(professorId) {
     return plainAll(db.prepare(`
-      SELECT a.*,
-        (SELECT at2.turma_id FROM aluno_turma at2 WHERE at2.aluno_id = a.id LIMIT 1) AS turmaId
-      FROM alunos a ORDER BY a.nome
-    `).all())
+      SELECT DISTINCT a.*,
+        (SELECT at2.turma_id FROM aluno_turma at2
+         JOIN turmas t2 ON t2.id = at2.turma_id
+         WHERE at2.aluno_id = a.id AND t2.professor_id = ?
+         LIMIT 1) AS turmaId
+      FROM alunos a
+      JOIN aluno_turma at ON at.aluno_id = a.id
+      JOIN turmas t ON t.id = at.turma_id
+      WHERE t.professor_id = ?
+      ORDER BY a.nome
+    `).all(professorId, professorId))
   },
 
   findByTurma(turmaId) {
@@ -32,10 +38,6 @@ const AlunoRepository = {
       JOIN aluno_turma at ON at.turma_id = t.id
       WHERE at.aluno_id = ?
     `).all(alunoId))
-  },
-
-  findSerieByTurma(turmaId) {
-    return plain(db.prepare('SELECT serie FROM turmas WHERE id = ?').get(turmaId))
   },
 
   create({ id, nome, matricula, email, serie, turmaIds }) {

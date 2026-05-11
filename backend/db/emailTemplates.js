@@ -6,14 +6,14 @@
 const logoSVG = `
 <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
   <tr>
-    <td>
-      <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#06b6d4,#34d399);display:flex;align-items:center;justify-content:center;">
-        <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="25" y="15" width="14" height="70" rx="7" fill="white"/>
-          <path d="M 39 45 L 70 20 L 80 28 L 75 33 L 50 53 L 39 50 Z" fill="white"/>
-          <path d="M 39 55 L 50 47 L 75 67 L 80 72 L 70 80 L 39 50 Z" fill="white"/>
-        </svg>
-      </div>
+    <td align="center">
+      <img
+        src="https://raw.githubusercontent.com/lvt10/Kadu/main/frontend/src/assets/kadu_icon.png"
+        alt="Kadu"
+        width="64"
+        height="64"
+        style="border-radius:16px;display:block;"
+      />
     </td>
   </tr>
   <tr>

@@ -1,13 +1,12 @@
 'use strict'
-// routes/turmas.js
-const router    = require('express').Router()
-const auth      = require('../middleware/auth')
-const repo      = require('../repositories/TurmaRepository')
+const router      = require('express').Router()
+const auth        = require('../middleware/auth')
+const repo        = require('../repositories/TurmaRepository')
 const NotaService = require('../services/NotaService')
 const { randomUUID } = require('crypto')
 
 router.get('/', auth, (req, res) => {
-  const turmas = repo.findAll()
+  const turmas = repo.findAll(req.user.id)
   res.json(turmas.map(t => ({ ...t, media: NotaService.mediaTurma(t.id) })))
 })
 
@@ -25,16 +24,15 @@ router.post('/', auth, (req, res) => {
 })
 
 router.get('/:id', auth, (req, res) => {
-  const turma = repo.findById(req.params.id)
+  const turma = repo.findById(req.params.id, req.user.id)
   if (!turma) return res.status(404).json({ erro: 'Turma não encontrada' })
-// Troque mediaAluno por mediaAlunoPorTurma
   const alunos = repo.findAlunosByTurma(req.params.id)
     .map(a => ({ ...a, mediaNotas: NotaService.mediaAlunoPorTurma(a.id, req.params.id) }))
   res.json({ ...turma, media: NotaService.mediaTurma(req.params.id), alunos })
 })
 
 router.delete('/:id', auth, (req, res) => {
-  if (!repo.delete(req.params.id)) return res.status(404).json({ erro: 'Turma não encontrada' })
+  if (!repo.delete(req.params.id, req.user.id)) return res.status(404).json({ erro: 'Turma não encontrada' })
   res.json({ mensagem: 'Turma removida com sucesso' })
 })
 

@@ -4,20 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Input } from '../components/ui/input'
 import { Button } from '../components/ui/button'
 import { Label } from '../components/ui/label'
-import { User, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react'
+import { User, Mail, Lock, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react'
 import { Logo } from '../components/Logo'
 import { api } from '../lib/api'
 
 export default function Registro() {
   const navigate = useNavigate()
-  const [etapa,      setEtapa]      = useState<'formulario' | 'codigo'>('formulario')
-  const [nome,       setNome]       = useState('')
-  const [email,      setEmail]      = useState('')
-  const [senha,      setSenha]      = useState('')
-  const [confirmar,  setConfirmar]  = useState('')
-  const [codigo,     setCodigo]     = useState('')
-  const [erro,       setErro]       = useState('')
-  const [carregando, setCarregando] = useState(false)
+  const [etapa,         setEtapa]         = useState<'formulario' | 'codigo'>('formulario')
+  const [nome,          setNome]          = useState('')
+  const [email,         setEmail]         = useState('')
+  const [senha,         setSenha]         = useState('')
+  const [confirmar,     setConfirmar]     = useState('')
+  const [codigo,        setCodigo]        = useState('')
+  const [erro,          setErro]          = useState('')
+  const [carregando,    setCarregando]    = useState(false)
+  const [reenvioTimer,  setReenvioTimer]  = useState(0)
+  const [reenvioMsg,    setReenvioMsg]    = useState('')
 
   const senhaRequisitos = [
     { ok: senha.length >= 8,           texto: 'Mínimo 8 caracteres' },
@@ -26,6 +28,17 @@ export default function Registro() {
     { ok: /[^a-zA-Z0-9]/.test(senha),  texto: 'Pelo menos um caractere especial (!@#$%...)' },
   ]
   const senhaValida = senhaRequisitos.every(r => r.ok)
+
+  // Inicia contagem regressiva de X segundos
+  function iniciarTimer(segundos: number) {
+    setReenvioTimer(segundos)
+    const intervalo = setInterval(() => {
+      setReenvioTimer(prev => {
+        if (prev <= 1) { clearInterval(intervalo); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+  }
 
   const handleEnviarCodigo = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,8 +50,26 @@ export default function Registro() {
     try {
       await api.post('/auth/registro/enviar-codigo', { nome, email, senha })
       setEtapa('codigo')
+      iniciarTimer(60)
     } catch (e: unknown) {
       setErro(e instanceof Error ? e.message : 'Erro ao enviar código')
+    } finally {
+      setCarregando(false)
+    }
+  }
+
+  const handleReenviar = async () => {
+    if (reenvioTimer > 0) return
+    setErro('')
+    setReenvioMsg('')
+    setCarregando(true)
+    try {
+      await api.post('/auth/registro/enviar-codigo', { nome, email, senha })
+      setCodigo('')
+      setReenvioMsg('Novo código enviado com sucesso!')
+      iniciarTimer(60)
+    } catch (e: unknown) {
+      setErro(e instanceof Error ? e.message : 'Erro ao reenviar código')
     } finally {
       setCarregando(false)
     }
@@ -113,7 +144,6 @@ export default function Registro() {
                       <Input type="password" placeholder="Mínimo 8 caracteres" value={senha}
                         onChange={e => setSenha(e.target.value)} className="pl-10" required />
                     </div>
-                    {/* Indicador de requisitos da senha */}
                     {senha && (
                       <div className="space-y-1 mt-1">
                         {senhaRequisitos.map(({ ok, texto }) => (
@@ -133,7 +163,6 @@ export default function Registro() {
                       <Input type="password" placeholder="Repita a senha" value={confirmar}
                         onChange={e => setConfirmar(e.target.value)} className="pl-10" required />
                     </div>
-                    {/* Indicador de senhas iguais */}
                     {confirmar && (
                       <p className={`text-xs flex items-center gap-1 ${senha === confirmar ? 'text-green-600' : 'text-red-500'}`}>
                         <span>{senha === confirmar ? '✓' : '✗'}</span>
@@ -172,6 +201,14 @@ export default function Registro() {
                       <p className="text-sm text-red-600">{erro}</p>
                     </div>
                   )}
+
+                  {reenvioMsg && (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <p className="text-sm text-green-600">{reenvioMsg}</p>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label>Código de Verificação</Label>
                     <Input
@@ -184,11 +221,31 @@ export default function Registro() {
                     />
                     <p className="text-xs text-gray-500 text-center">O código expira em 10 minutos</p>
                   </div>
+
                   <Button type="submit" className="w-full" disabled={carregando || codigo.length < 6}>
                     {carregando ? 'Verificando...' : 'Confirmar Cadastro'}
                   </Button>
+
+                  {/* Botão de reenvio com timer */}
+                  <div className="text-center">
+                    {reenvioTimer > 0 ? (
+                      <p className="text-sm text-gray-400">
+                        Reenviar código em <span className="font-semibold text-gray-600">{reenvioTimer}s</span>
+                      </p>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleReenviar}
+                        disabled={carregando}
+                        className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium mx-auto disabled:opacity-50">
+                        <RefreshCw className="w-4 h-4" />
+                        Não recebi o código — reenviar
+                      </button>
+                    )}
+                  </div>
+
                   <Button type="button" variant="ghost" className="w-full"
-                    onClick={() => { setEtapa('formulario'); setErro('') }}>
+                    onClick={() => { setEtapa('formulario'); setErro(''); setReenvioMsg('') }}>
                     Voltar e alterar dados
                   </Button>
                 </form>
