@@ -75,6 +75,15 @@ db.exec(`
     status   TEXT    NOT NULL,
     UNIQUE(aluno_id, turma_id, data)
   );
+  CREATE TABLE IF NOT EXISTS codigos_verificacao (
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  email     TEXT    NOT NULL,
+  codigo    TEXT    NOT NULL,
+  nome      TEXT    NOT NULL,
+  senha     TEXT    NOT NULL,
+  expira_em INTEGER NOT NULL,
+  usado     INTEGER DEFAULT 0
+  );
 `)
 
 // node:sqlite retorna null prototype — helper global
