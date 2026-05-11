@@ -19,11 +19,19 @@ export default function Registro() {
   const [erro,       setErro]       = useState('')
   const [carregando, setCarregando] = useState(false)
 
+  const senhaRequisitos = [
+    { ok: senha.length >= 8,           texto: 'Mínimo 8 caracteres' },
+    { ok: /[a-zA-Z]/.test(senha),      texto: 'Pelo menos uma letra' },
+    { ok: /[0-9]/.test(senha),         texto: 'Pelo menos um número' },
+    { ok: /[^a-zA-Z0-9]/.test(senha),  texto: 'Pelo menos um caractere especial (!@#$%...)' },
+  ]
+  const senhaValida = senhaRequisitos.every(r => r.ok)
+
   const handleEnviarCodigo = async (e: React.FormEvent) => {
     e.preventDefault()
     setErro('')
     if (senha !== confirmar) return setErro('As senhas não coincidem')
-    if (senha.length < 6)    return setErro('A senha deve ter no mínimo 6 caracteres')
+    if (!senhaValida)        return setErro('A senha não atende aos requisitos mínimos')
 
     setCarregando(true)
     try {
@@ -79,6 +87,7 @@ export default function Registro() {
                       <p className="text-sm text-red-600">{erro}</p>
                     </div>
                   )}
+
                   <div className="space-y-2">
                     <Label>Nome Completo</Label>
                     <div className="relative">
@@ -87,6 +96,7 @@ export default function Registro() {
                         onChange={e => setNome(e.target.value)} className="pl-10" required />
                     </div>
                   </div>
+
                   <div className="space-y-2">
                     <Label>E-mail</Label>
                     <div className="relative">
@@ -95,14 +105,27 @@ export default function Registro() {
                         onChange={e => setEmail(e.target.value)} className="pl-10" required />
                     </div>
                   </div>
+
                   <div className="space-y-2">
                     <Label>Senha</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <Input type="password" placeholder="Mínimo 6 caracteres" value={senha}
+                      <Input type="password" placeholder="Mínimo 8 caracteres" value={senha}
                         onChange={e => setSenha(e.target.value)} className="pl-10" required />
                     </div>
+                    {/* Indicador de requisitos da senha */}
+                    {senha && (
+                      <div className="space-y-1 mt-1">
+                        {senhaRequisitos.map(({ ok, texto }) => (
+                          <div key={texto} className={`flex items-center gap-2 text-xs ${ok ? 'text-green-600' : 'text-gray-400'}`}>
+                            <span>{ok ? '✓' : '○'}</span>
+                            <span>{texto}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
+
                   <div className="space-y-2">
                     <Label>Confirmar Senha</Label>
                     <div className="relative">
@@ -110,11 +133,20 @@ export default function Registro() {
                       <Input type="password" placeholder="Repita a senha" value={confirmar}
                         onChange={e => setConfirmar(e.target.value)} className="pl-10" required />
                     </div>
+                    {/* Indicador de senhas iguais */}
+                    {confirmar && (
+                      <p className={`text-xs flex items-center gap-1 ${senha === confirmar ? 'text-green-600' : 'text-red-500'}`}>
+                        <span>{senha === confirmar ? '✓' : '✗'}</span>
+                        {senha === confirmar ? 'Senhas coincidem' : 'Senhas não coincidem'}
+                      </p>
+                    )}
                   </div>
+
                   <Button type="submit" className="w-full" disabled={carregando}>
                     {carregando ? 'Enviando código...' : 'Enviar Código de Verificação'}
                   </Button>
                 </form>
+
                 <div className="mt-6 text-center text-sm text-gray-600">
                   Já tem uma conta?{' '}
                   <Link to="/login" className="text-blue-600 font-medium hover:underline">Fazer login</Link>
@@ -164,6 +196,10 @@ export default function Registro() {
             </>
           )}
         </Card>
+
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>© 2026 Kadu. Todos os direitos reservados.</p>
+        </div>
       </div>
     </div>
   )
