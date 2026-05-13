@@ -18,3 +18,13 @@
     background: white !important;
   }
 }
+/* Cursor pointer em todos os elementos clicáveis */
+button,
+a,
+[role="button"],
+[type="button"],
+[type="submit"],
+select,
+label[for] {
+  cursor: pointer;
+}
