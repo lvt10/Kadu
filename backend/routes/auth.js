@@ -6,10 +6,27 @@ const ProfessorRepository = require('../repositories/ProfessorRepository')
 const bcrypt       = require('bcryptjs')
 const jwt          = require('jsonwebtoken')
 const { db }       = require('../db/connection')
-const { Resend }   = require('resend')
 const { emailVerificacao, emailSenhaTemporaria } = require('../db/emailTemplates')
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+async function enviarEmail({ to, toName, subject, html }) {
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'api-key': process.env.BREVO_API_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender:      { name: 'Kadu', email: 'noreply@kadu.app' },
+      to:          [{ email: to, name: toName }],
+      subject,
+      htmlContent: html,
+    }),
+  })
+  if (!res.ok) {
+    const erro = await res.text()
+    throw new Error(`Brevo: ${res.status} — ${erro}`)
+  }
+}
 
 // ─── Login ────────────────────────────────────────────────────────────────────
 router.post('/login', (req, res) => {
@@ -42,11 +59,10 @@ router.post('/registro/enviar-codigo', async (req, res) => {
   db.prepare('INSERT INTO codigos_verificacao (email, codigo, nome, senha, expira_em) VALUES (?, ?, ?, ?, ?)')
     .run(email, codigo, nome, hash, expira_em)
 
-  await resend.emails.send({
-    from:    'Kadu <onboarding@resend.dev>',
-    to:      email,
+  await enviarEmail({
+    to: email, toName: nome,
     subject: 'Código de verificação — Kadu',
-    html:    emailVerificacao(nome, codigo),
+    html: emailVerificacao(nome, codigo),
   })
 
   res.json({ mensagem: 'Código enviado para o email' })
@@ -95,11 +111,10 @@ router.post('/esqueci-senha', async (req, res) => {
 
   db.prepare('UPDATE professores SET senha_hash = ? WHERE email = ?').run(hash, email)
 
-  await resend.emails.send({
-    from:    'Kadu <onboarding@resend.dev>',
-    to:      email,
+  await enviarEmail({
+    to: email, toName: prof.nome,
     subject: 'Sua nova senha temporária — Kadu',
-    html:    emailSenhaTemporaria(prof.nome, senhaTemp),
+    html: emailSenhaTemporaria(prof.nome, senhaTemp),
   })
 
   res.json({ mensagem: 'Senha temporária enviada para o email' })
