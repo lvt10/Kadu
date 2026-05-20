@@ -29,95 +29,78 @@ Escala de pontos: Fibonacci (1, 2, 3, 5, 8, 13)
 
 ## Sprint 2 — "Gestão Pedagógica & Qualidade de UX"
 
-**Objetivo:** Entregar as funcionalidades de notas, boletim e dashboard com qualidade de UX e refatorações baseadas em SOLID.
+**Objetivo:** Entregar as funcionalidades de notas, boletim e dashboard com qualidade de UX.
+**Velocidade planejada:** 28 pontos
 
 ---
-
-### TELA DE DASHBOARD
 
 | ID | Descrição | Tag | Pts |
 |----|-----------|-----|-----|
-| SCRUM-34 | RN10: O professor deve visualizar o total de alunos, atividades ativas, taxa de presença do dia e média geral ao acessar o dashboard | TELA DE DASHBOARD | 5 |
-| SCRUM-35 | RN11: O dashboard deve exibir um gráfico de distribuição de notas por faixa de desempenho | TELA DE DASHBOARD | 3 |
-| SCRUM-36 | RN12: O dashboard deve listar as próximas atividades com prazo, destacando em vermelho as com ≤ 2 dias restantes | TELA DE DASHBOARD | 2 |
-| SCRUM-37 | RNF08 (Usabilidade): O dashboard deve exibir skeleton animado durante o carregamento dos dados | TELA DE DASHBOARD | 1 |
+| SCRUM-34 | RN10: O professor deve visualizar dashboard com total de alunos, atividades ativas, taxa de presença do dia, média geral e gráfico de distribuição de notas | TELA DE DASHBOARD | 5 |
+| SCRUM-35 | RN11: O professor deve visualizar suas turmas em cards com quantidade de alunos e média geral; deve poder excluir uma turma mediante confirmação explícita | TELA DE GERENCIAMENTO DE TURMAS | 3 |
+| SCRUM-36 | RN12: O professor deve poder buscar alunos por nome, e-mail ou matrícula e filtrar por turma simultaneamente | RF1 - TELA DE GERENCIAMENTO DE ALUNOS | 3 |
+| SCRUM-37 | RN13: O professor deve poder lançar e editar notas de 1º a 4º bimestre por aluno; a média deve ser calculada automaticamente em tempo real | TELA DE LANÇAMENTO DE NOTAS | 8 |
+| SCRUM-38 | RN14: O professor deve poder visualizar e imprimir o boletim completo de um aluno com notas por bimestre, média por disciplina e média geral | TELA DO BOLETIM | 5 |
+| SCRUM-39 | RN15: Um aluno com média ≥ 6 deve ser classificado como "Aprovado"; com média < 6, como "Reprovado" | TELA DE LANÇAMENTO DE NOTAS | 1 |
+| SCRUM-40 | RNF08 (Usabilidade): Todas as telas com carregamento de dados devem exibir skeleton animado; todas as ações destrutivas devem exibir diálogo de confirmação visual consistente | QUALIDADE DE UX | 3 |
+
+**Total: 28 pontos**
 
 ---
 
-### TELA DE GERENCIAMENTO DE TURMAS
+### Critérios de Aceite por Item
 
-| ID | Descrição | Tag | Pts |
-|----|-----------|-----|-----|
-| SCRUM-38 | RN13: Cada turma deve exibir a quantidade de alunos matriculados e a média geral de notas da turma | TELA DE GERENCIAMENTO DE TURMAS | 3 |
-| SCRUM-39 | RN14: A exclusão de uma turma deve exigir confirmação explícita do professor antes de ser executada | TELA DE GERENCIAMENTO DE TURMAS | 2 |
-| SCRUM-40 | RNF09 (Usabilidade): O sistema deve exibir skeleton animado durante o carregamento da listagem de turmas | TELA DE GERENCIAMENTO DE TURMAS | 1 |
+**SCRUM-34 — Dashboard**
+- [ ] Exibe: total de alunos, atividades ativas, presença do dia e média geral
+- [ ] Gráfico de barras com distribuição de notas por faixa
+- [ ] Lista de próximas atividades; prazo ≤ 2 dias destacado em vermelho
+- [ ] Skeleton animado durante carregamento
 
----
+**SCRUM-35 — Listagem de Turmas**
+- [ ] Card por turma com: nome, disciplina, período, qtd. alunos e média
+- [ ] Média colorida: verde ≥ 9 · azul ≥ 6 · vermelho < 6
+- [ ] Exclusão exige confirmação com nome da turma e aviso "Esta ação não pode ser desfeita"
+- [ ] Skeleton animado durante carregamento
 
-### TELA DE GERENCIAMENTO DE ALUNOS
+**SCRUM-36 — Listagem de Alunos**
+- [ ] Busca simultânea por nome, e-mail e matrícula (case-insensitive)
+- [ ] Filtro por turma combinável com a busca
+- [ ] Estado vazio diferencia "sem cadastros" de "sem resultados para os filtros"
+- [ ] Exclusão exige confirmação com nome do aluno
+- [ ] Skeleton animado durante carregamento
 
-| ID | Descrição | Tag | Pts |
-|----|-----------|-----|-----|
-| SCRUM-41 | RN15: O professor deve poder buscar alunos por nome, e-mail ou matrícula e filtrar por turma simultaneamente | RF1 - TELA DE GERENCIAMENTO DE ALUNOS | 3 |
-| SCRUM-42 | RN16: A exclusão de um aluno deve exigir confirmação explícita com o nome do aluno destacado antes de ser executada | RF1 - TELA DE GERENCIAMENTO DE ALUNOS | 2 |
-| SCRUM-43 | RNF10 (Usabilidade): O sistema deve exibir skeleton animado durante o carregamento da listagem de alunos | RF1 - TELA DE GERENCIAMENTO DE ALUNOS | 1 |
+**SCRUM-37 — Lançamento de Notas**
+- [ ] Fluxo: seleciona turma → lista alunos → seleciona aluno → lança nota do bimestre
+- [ ] 4 botões de bimestre permitem alternar qual nota está sendo editada
+- [ ] Média recalculada a cada keystroke; status "Aprovado"/"Reprovado" exibido em tempo real
+- [ ] Nome da turma e do aluno visíveis permanentemente durante o preenchimento
+- [ ] Campo aceita apenas valores entre 0 e 10 com passo de 0,1
+- [ ] Campo de busca por nome/matrícula na listagem de alunos da turma
+- [ ] Skeleton animado durante carregamento
 
----
+**SCRUM-38 — Boletim**
+- [ ] Exibe: nome, matrícula, série e professor responsável do aluno
+- [ ] Tabela com colunas: 1º ao 4º Bimestre, Média e Status por disciplina
+- [ ] Linha de rodapé com Média Geral entre todas as disciplinas
+- [ ] Botão "Imprimir" oculta sidebar e navegação, exibindo apenas conteúdo pedagógico
+- [ ] Skeleton animado durante carregamento
 
-### TELA DE LANÇAMENTO DE NOTAS
+**SCRUM-39 — Regra de aprovação**
+- [ ] Média ≥ 6 → "Aprovado" (badge azul)
+- [ ] Média < 6 → "Reprovado" (badge vermelho)
+- [ ] Regra aplicada de forma idêntica em todas as telas (lançamento, boletim, detalhes da turma)
 
-| ID | Descrição | Tag | Pts |
-|----|-----------|-----|-----|
-| SCRUM-44 | RN17: O professor deve poder lançar e editar notas de 1º a 4º bimestre individualmente para cada aluno de cada turma | TELA DE LANÇAMENTO DE NOTAS | 8 |
-| SCRUM-45 | RN18: A média do aluno deve ser calculada automaticamente em tempo real conforme as notas dos bimestres são inseridas | TELA DE LANÇAMENTO DE NOTAS | 3 |
-| SCRUM-46 | RN19: Um aluno com média ≥ 6 deve ser classificado como "Aprovado"; com média < 6, como "Reprovado" | TELA DE LANÇAMENTO DE NOTAS | 1 |
-| SCRUM-47 | RN20: O sistema deve exibir o nome da turma e do aluno permanentemente visíveis durante o lançamento de notas | TELA DE LANÇAMENTO DE NOTAS | 1 |
-| SCRUM-48 | RNF11 (Usabilidade): O campo de nota deve aceitar apenas valores numéricos entre 0 e 10 com precisão de 0,1 | TELA DE LANÇAMENTO DE NOTAS | 1 |
-| SCRUM-49 | RNF12 (Usabilidade): O professor deve poder buscar um aluno por nome ou matrícula na listagem de alunos da turma antes de lançar nota | TELA DE LANÇAMENTO DE NOTAS | 2 |
-| SCRUM-50 | RNF13 (Usabilidade): O sistema deve exibir skeleton animado durante o carregamento dos dados de turma, aluno e notas existentes | TELA DE LANÇAMENTO DE NOTAS | 1 |
-
----
-
-### TELA DO BOLETIM
-
-| ID | Descrição | Tag | Pts |
-|----|-----------|-----|-----|
-| SCRUM-51 | RN21: O boletim deve exibir nome, matrícula, série, professor responsável e notas de todos os bimestres por disciplina | TELA DO BOLETIM | 3 |
-| SCRUM-52 | RN22: O boletim deve calcular e exibir a Média Geral entre todas as disciplinas do aluno | TELA DO BOLETIM | 2 |
-| SCRUM-53 | RN23: O professor deve poder imprimir o boletim; durante a impressão, apenas o conteúdo pedagógico deve ser visível (sem sidebar ou botões de navegação) | TELA DO BOLETIM | 2 |
-| SCRUM-54 | RNF14 (Usabilidade): O boletim deve exibir skeleton animado durante o carregamento dos dados | TELA DO BOLETIM | 1 |
-
----
-
-### QUALIDADE INTERNA (Refatoração & Bug Fix)
-
-| ID | Descrição | Tag | Pts |
-|----|-----------|-----|-----|
-| SCRUM-55 | RNF15 (Manutenibilidade): A lógica de cor e status de notas deve ser centralizada em um único módulo (`grades.ts`), eliminando duplicação entre telas — SRP e DIP do SOLID | REFATORAÇÃO | 2 |
-| SCRUM-56 | RNF16 (Usabilidade): Todas as ações destrutivas devem usar o componente `AlertDialog` do design system em vez de `window.confirm()` nativo do browser | REFATORAÇÃO | 2 |
-| SCRUM-57 | BUG: O endpoint `POST /notas` retornava erro 500 ao salvar notas pois `professorId` era passado como `undefined` para o repositório | BUG FIX | 1 |
-
----
-
-## Resumo da Sprint 2
-
-| Tag | Qtd. de itens | Total de pontos |
-|-----|--------------|-----------------|
-| TELA DE DASHBOARD | 4 | 11 |
-| TELA DE GERENCIAMENTO DE TURMAS | 3 | 6 |
-| TELA DE GERENCIAMENTO DE ALUNOS | 3 | 6 |
-| TELA DE LANÇAMENTO DE NOTAS | 7 | 17 |
-| TELA DO BOLETIM | 4 | 8 |
-| REFATORAÇÃO / BUG FIX | 3 | 5 |
-| **Total** | **24 itens** | **53 pts** |
+**SCRUM-40 — Qualidade de UX**
+- [ ] Skeleton em todas as 6 telas com fetch assíncrono
+- [ ] Diálogo de confirmação visual (não `window.confirm` nativo) em todas as exclusões
+- [ ] Sistema de cores e status de notas consistente entre todas as telas
 
 ---
 
 ## Definição de Pronto (DoD) — Sprint 2
 
-- [ ] Regras de negócio validadas manualmente com o usuário demo (`professor@escola.edu.br`)
+- [ ] Todos os critérios de aceite verificados manualmente com o usuário demo
+- [ ] Regra de aprovação (média ≥ 6) consistente em todas as telas
 - [ ] Nenhum `window.confirm()` no código de produção
-- [ ] Todos os estados de loading cobertos por skeleton
-- [ ] Lógica de cor/status importada exclusivamente de `grades.ts`
-- [ ] Bug SCRUM-57 verificado via Postman/Insomnia
+- [ ] Skeleton presente em todas as telas com carregamento assíncrono
 - [ ] Build (`vite build`) sem erros de TypeScript
