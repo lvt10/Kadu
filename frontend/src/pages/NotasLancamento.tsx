@@ -211,7 +211,7 @@ export default function NotasLancamento() {
                   {notas[bimKey] !== '' && (() => {
                     const v = parseFloat(notas[bimKey])
                     const s = statusNota(v)
-                    const icon = s === 'Aprovado' ? '✓' : s === 'Recuperação' ? '⚠' : '✗'
+                    const icon = s === 'Aprovado' ? '✓' : '✗'
                     return (
                       <span className={`font-bold text-xl ${corNota(v)}`}>
                         {icon} {s}

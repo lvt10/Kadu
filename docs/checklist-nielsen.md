@@ -41,8 +41,8 @@
 | Interface em português | `Root.tsx:8–12` | Sidebar com "Turmas", "Alunos", "Notas" |
 | Terminologia escolar brasileira | `Boletim.tsx:101` | "Boletim Escolar", colunas "1º Bimestre"…"4º Bimestre" |
 | Terminologia escolar brasileira | `NotasLancamento.tsx:189` | Botões "{n}º Bimestre" |
-| Status pedagógico contextualizado | `grades.ts:9–16` | `statusNota()` retorna "Aprovado", "Recuperação", "Reprovado" |
-| Color coding de notas | `grades.ts:1–7` | Verde ≥ 9 · Azul ≥ 7 · Amarelo ≥ 5 · Vermelho < 5 |
+| Status pedagógico contextualizado | `grades.ts:9–13` | `statusNota()` retorna "Aprovado" (≥ 6) ou "Reprovado" (< 6) |
+| Color coding de notas | `grades.ts:1–6` | Verde ≥ 9 · Azul ≥ 6 · Vermelho < 6 |
 | Placeholder contextual | `Login.tsx:94` | `placeholder="professor@escola.edu.br"` |
 | Campo "Matrícula" explícito | `Alunos.tsx:164` | "Matrícula: {aluno.matricula}" junto ao nome |
 
