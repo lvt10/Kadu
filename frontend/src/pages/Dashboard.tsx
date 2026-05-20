@@ -1,16 +1,57 @@
-// src/pages/Dashboard.tsx
-// Responsabilidade única: renderizar o dashboard.
-// Busca de dados delegada ao useDashboard hook.
-
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Skeleton } from '../components/ui/skeleton'
 import { Users, FileText, CheckSquare, TrendingUp } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useDashboard } from '../hooks'
 
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-9 w-20 mb-2" />
+              <Skeleton className="h-3 w-36" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader><Skeleton className="h-6 w-48" /></CardHeader>
+          <CardContent><Skeleton className="h-[250px] w-full" /></CardContent>
+        </Card>
+        <Card>
+          <CardHeader><Skeleton className="h-6 w-44" /></CardHeader>
+          <CardContent className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-start justify-between border-b pb-3">
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <div className="ml-4 space-y-1 text-right">
+                  <Skeleton className="h-6 w-16 ml-auto" />
+                  <Skeleton className="h-3 w-20 ml-auto" />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { data, loading } = useDashboard()
 
-  if (loading || !data) return <div className="flex justify-center py-20 text-gray-400">Carregando...</div>
+  if (loading || !data) return <DashboardSkeleton />
 
   const diasAteEntrega = (dataEntrega: string) =>
     Math.ceil((new Date(dataEntrega).getTime() - Date.now()) / 86400000)

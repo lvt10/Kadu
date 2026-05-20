@@ -2,29 +2,68 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
-import { ArrowLeft, User, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react'
+import { Input } from '../components/ui/input'
+import { Skeleton } from '../components/ui/skeleton'
+import { ArrowLeft, User, ChevronRight, TrendingUp, TrendingDown, Search } from 'lucide-react'
 import { api } from '../lib/api'
+import { corNota } from '../lib/grades'
 
 interface Aluno { id: string; nome: string; matricula: string; mediaNotas: number }
 interface Turma  { id: string; nome: string; serie: string; media: number; alunos: Aluno[] }
+
+function ListaAlunosSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-9 w-9 rounded-md" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-52" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="pb-2"><Skeleton className="h-4 w-32" /></CardHeader>
+          <CardContent><Skeleton className="h-9 w-12" /></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><Skeleton className="h-4 w-32" /></CardHeader>
+          <CardContent><Skeleton className="h-9 w-16" /></CardContent>
+        </Card>
+      </div>
+      <Card>
+        <CardHeader><Skeleton className="h-6 w-36" /></CardHeader>
+        <CardContent className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
 
 export default function NotasListaAlunos() {
   const navigate = useNavigate()
   const { turmaId } = useParams()
   const [turma,  setTurma]  = useState<Turma | null>(null)
+  const [busca,  setBusca]  = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     api.get<Turma>(`/turmas/${turmaId}`).then(setTurma).finally(() => setLoading(false))
   }, [turmaId])
 
-  if (loading) return <div className="flex justify-center py-20 text-gray-400">Carregando...</div>
+  if (loading) return <ListaAlunosSkeleton />
 
   if (!turma) return (
     <div className="space-y-6">
       <Button variant="ghost" size="icon" onClick={() => navigate('/notas')}><ArrowLeft className="w-5 h-5" /></Button>
       <p className="text-center text-gray-500">Turma não encontrada</p>
     </div>
+  )
+
+  const filtrados = turma.alunos.filter(a =>
+    a.nome.toLowerCase().includes(busca.toLowerCase()) ||
+    a.matricula.includes(busca)
   )
 
   return (
@@ -49,7 +88,7 @@ export default function NotasListaAlunos() {
             <CardTitle className="text-sm font-medium text-gray-600">Média da Turma</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${turma.media >= 7 ? 'text-green-600' : 'text-orange-600'}`}>
+            <div className={`text-3xl font-bold ${corNota(turma.media)}`}>
               {turma.media.toFixed(1)}
             </div>
           </CardContent>
@@ -57,11 +96,23 @@ export default function NotasListaAlunos() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Alunos da Turma</CardTitle></CardHeader>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle>Alunos da Turma</CardTitle>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Buscar por nome ou matrícula..."
+                value={busca}
+                onChange={e => setBusca(e.target.value)}
+                className="pl-10" />
+            </div>
+          </div>
+        </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {turma.alunos.map(aluno => {
-              const media = aluno.mediaNotas  // escala 0-100 → 0-10
+            {filtrados.map(aluno => {
+              const media = aluno.mediaNotas
               return (
                 <div key={aluno.id}
                   onClick={() => navigate(`/notas/turma/${turmaId}/aluno/${aluno.id}`)}
@@ -78,7 +129,7 @@ export default function NotasListaAlunos() {
                   <div className="flex items-center gap-6">
                     <div className="text-right">
                       <div className="text-sm text-gray-500">Média Atual</div>
-                      <div className={`text-2xl font-bold ${media >= 7 ? 'text-green-600' : 'text-orange-600'}`}>
+                      <div className={`text-2xl font-bold ${corNota(media)}`}>
                         {media.toFixed(1)}
                       </div>
                     </div>
@@ -91,10 +142,12 @@ export default function NotasListaAlunos() {
               )
             })}
           </div>
-          {turma.alunos.length === 0 && (
+          {filtrados.length === 0 && (
             <div className="py-12 text-center">
               <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhum aluno matriculado nesta turma</p>
+              <p className="text-gray-500">
+                {busca ? 'Nenhum aluno encontrado para essa busca.' : 'Nenhum aluno matriculado nesta turma.'}
+              </p>
             </div>
           )}
         </CardContent>

@@ -4,19 +4,44 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
+import { Skeleton } from '../components/ui/skeleton'
 import { ArrowLeft, Save, User, BookOpen, TrendingUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '../lib/api'
+import { corNota, statusNota } from '../lib/grades'
 
 interface NotasBimestre { bimestre1: string; bimestre2: string; bimestre3: string; bimestre4: string }
 interface Turma  { id: string; nome: string; serie: string }
 interface Aluno  { id: string; nome: string; matricula: string }
 
-function corNota(nota: number) {
-  if (nota >= 9) return 'text-green-600'
-  if (nota >= 7) return 'text-blue-600'
-  if (nota >= 5) return 'text-yellow-600'
-  return 'text-red-600'
+function NotasLancamentoSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-9 w-9 rounded-md" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="pb-2"><Skeleton className="h-4 w-20" /></CardHeader>
+            <CardContent><Skeleton className="h-7 w-32" /><Skeleton className="h-4 w-24 mt-1" /></CardContent>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <CardHeader><Skeleton className="h-6 w-40" /></CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
 }
 
 export default function NotasLancamento() {
@@ -52,7 +77,7 @@ export default function NotasLancamento() {
 
   const calcularMedia = () => {
     const vals = Object.values(notas).map(v => parseFloat(v)).filter(v => !isNaN(v) && v >= 0)
-    if (!vals.length) return 0
+    if (!vals.length) return null
     return parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1))
   }
 
@@ -77,7 +102,7 @@ export default function NotasLancamento() {
     }
   }
 
-  if (loading) return <div className="flex justify-center py-20 text-gray-400">Carregando...</div>
+  if (loading) return <NotasLancamentoSkeleton />
 
   if (erro) return (
     <div className="space-y-6">
@@ -98,6 +123,7 @@ export default function NotasLancamento() {
 
   const bimKey = `bimestre${bimSelecionado}` as keyof NotasBimestre
   const media  = calcularMedia()
+  const stat   = statusNota(media)
 
   return (
     <div className="space-y-6">
@@ -141,7 +167,12 @@ export default function NotasLancamento() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${corNota(media)}`}>{media}</div>
+            <div className={`text-3xl font-bold ${corNota(media)}`}>{media ?? '—'}</div>
+            {media !== null && (
+              <div className="text-sm font-medium mt-1" style={{ color: 'inherit' }}>
+                <span className={corNota(media)}>{stat}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -179,9 +210,11 @@ export default function NotasLancamento() {
                 <div className="h-10 flex items-center">
                   {notas[bimKey] !== '' && (() => {
                     const v = parseFloat(notas[bimKey])
+                    const s = statusNota(v)
+                    const icon = s === 'Aprovado' ? '✓' : s === 'Recuperação' ? '⚠' : '✗'
                     return (
-                      <span className={`font-bold text-xl ${v >= 7 ? 'text-green-600' : v >= 5 ? 'text-yellow-600' : 'text-red-600'}`}>
-                        {v >= 7 ? '✓ Aprovado' : v >= 5 ? '⚠ Recuperação' : '✗ Reprovado'}
+                      <span className={`font-bold text-xl ${corNota(v)}`}>
+                        {icon} {s}
                       </span>
                     )
                   })()}

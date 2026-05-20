@@ -1,17 +1,64 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Button } from '../components/ui/button'
+import { Button, buttonVariants } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
 import { Badge } from '../components/ui/badge'
+import { Skeleton } from '../components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
+  AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction,
+} from '../components/ui/alert-dialog'
 import { Search, Plus, FileText, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '../lib/api'
 
 interface Turma { id: string; nome: string }
 interface Aluno  { id: string; nome: string; matricula: string; email: string; serie: string; turmaId: string; mediaNotas: number }
+
+function AlunosSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-9 w-32" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-9 w-36" />
+      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <Skeleton className="h-10 flex-1" />
+            <Skeleton className="h-10 w-full md:w-[200px]" />
+          </div>
+        </CardContent>
+      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader>
+              <div className="flex items-start gap-4">
+                <Skeleton className="w-12 h-12 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-5 w-36" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-9 w-full mt-2" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function Alunos() {
   const navigate = useNavigate()
@@ -21,6 +68,8 @@ export default function Alunos() {
   const [turmaFiltro, setTurmaFiltro] = useState('todas')
   const [loading, setLoading] = useState(true)
   const [erro,    setErro]    = useState('')
+  const [alunoParaDeletar, setAlunoParaDeletar] = useState<Aluno | null>(null)
+  const [deletando, setDeletando] = useState(false)
 
   useEffect(() => {
     Promise.all([api.get<Aluno[]>('/alunos'), api.get<Turma[]>('/turmas')])
@@ -29,15 +78,23 @@ export default function Alunos() {
       .finally(() => setLoading(false))
   }, [])
 
-  const handleDeletar = async (e: React.MouseEvent, aluno: Aluno) => {
+  const iniciarDelecao = (e: React.MouseEvent, aluno: Aluno) => {
     e.stopPropagation()
-    if (!window.confirm(`Tem certeza que deseja excluir o aluno "${aluno.nome}"? Esta ação não pode ser desfeita.`)) return
+    setAlunoParaDeletar(aluno)
+  }
+
+  const confirmarDelecao = async () => {
+    if (!alunoParaDeletar) return
+    setDeletando(true)
     try {
-      await api.delete(`/alunos/${aluno.id}`)
-      setAlunos(prev => prev.filter(a => a.id !== aluno.id))
+      await api.delete(`/alunos/${alunoParaDeletar.id}`)
+      setAlunos(prev => prev.filter(a => a.id !== alunoParaDeletar.id))
       toast.success('Aluno excluído com sucesso!')
     } catch {
       toast.error('Erro ao excluir aluno. Tente novamente.')
+    } finally {
+      setDeletando(false)
+      setAlunoParaDeletar(null)
     }
   }
 
@@ -50,7 +107,7 @@ export default function Alunos() {
 
   const iniciais = (nome: string) => nome.split(' ').map(n => n[0]).join('').toUpperCase()
 
-  if (loading) return <div className="flex justify-center py-20 text-gray-400">Carregando...</div>
+  if (loading) return <AlunosSkeleton />
 
   if (erro) return (
     <div className="text-center py-20">
@@ -106,8 +163,10 @@ export default function Alunos() {
                     <CardTitle className="text-lg truncate">{aluno.nome}</CardTitle>
                     <p className="text-sm text-gray-500 mt-1">Matrícula: {aluno.matricula}</p>
                   </div>
-                  <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
-                    onClick={e => handleDeletar(e, aluno)}>
+                  <Button variant="ghost" size="icon"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                    title="Excluir aluno"
+                    onClick={e => iniciarDelecao(e, aluno)}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
@@ -138,10 +197,37 @@ export default function Alunos() {
       {filtrados.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-gray-500">Nenhum aluno encontrado</p>
+            <p className="text-gray-500">
+              {busca || turmaFiltro !== 'todas'
+                ? 'Nenhum aluno encontrado para os filtros aplicados.'
+                : 'Nenhum aluno cadastrado.'}
+            </p>
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog
+        open={!!alunoParaDeletar}
+        onOpenChange={open => { if (!open) setAlunoParaDeletar(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir aluno</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o aluno <strong>"{alunoParaDeletar?.nome}"</strong>?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletando}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className={buttonVariants({ variant: 'destructive' })}
+              onClick={confirmarDelecao}
+              disabled={deletando}>
+              {deletando ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

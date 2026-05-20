@@ -3,8 +3,10 @@ import { useNavigate, useParams } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
+import { Skeleton } from '../components/ui/skeleton'
 import { ArrowLeft, Printer } from 'lucide-react'
 import { api } from '../lib/api'
+import { corNota, statusNota, varianteBadge } from '../lib/grades'
 
 interface NotaBimestral {
   id: number; materia: string; turmaNome: string
@@ -18,17 +20,33 @@ function calcularMedia(n: NotaBimestral) {
   return parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1))
 }
 
-function corNota(nota: number | null) {
-  if (nota === null) return 'text-gray-400'
-  if (nota >= 9) return 'text-green-600'
-  if (nota >= 7) return 'text-blue-600'
-  if (nota >= 6) return 'text-yellow-600'
-  return 'text-red-600'
-}
-
-function status(media: number | null) {
-  if (media === null) return 'Pendente'
-  return media >= 6 ? 'Aprovado' : 'Recuperação'
+function BoletimSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-9 w-40" />
+        <Skeleton className="h-9 w-36" />
+      </div>
+      <Card>
+        <CardHeader><div className="text-center space-y-2"><Skeleton className="h-9 w-48 mx-auto" /><Skeleton className="h-4 w-32 mx-auto" /></div></CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 border-t">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="space-y-1"><Skeleton className="h-3 w-24" /><Skeleton className="h-5 w-40" /></div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><Skeleton className="h-6 w-40" /></CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
 }
 
 export default function Boletim() {
@@ -45,7 +63,7 @@ export default function Boletim() {
     ]).then(([a, n]) => { setAluno(a); setNotas(n) }).finally(() => setLoading(false))
   }, [alunoId])
 
-  if (loading) return <div className="flex justify-center py-20 text-gray-400">Carregando...</div>
+  if (loading) return <BoletimSkeleton />
 
   if (!aluno) return (
     <div className="space-y-6">
@@ -108,7 +126,7 @@ export default function Boletim() {
                 <tbody>
                   {notas.map(nota => {
                     const media   = calcularMedia(nota)
-                    const stat    = status(media)
+                    const stat    = statusNota(media)
                     const fmt     = (v: number|null) => v !== null ? v.toFixed(1) : '—'
                     return (
                       <tr key={nota.id} className="border-b hover:bg-gray-50">
@@ -122,9 +140,7 @@ export default function Boletim() {
                           <span className={`font-bold text-lg ${corNota(media)}`}>{fmt(media)}</span>
                         </td>
                         <td className="text-center py-3 px-4">
-                          <Badge variant={stat === 'Aprovado' ? 'default' : stat === 'Pendente' ? 'secondary' : 'destructive'}>
-                            {stat}
-                          </Badge>
+                          <Badge variant={varianteBadge(stat)}>{stat}</Badge>
                         </td>
                       </tr>
                     )
@@ -137,8 +153,8 @@ export default function Boletim() {
                       <span className={`font-bold text-xl ${corNota(mediaGeral)}`}>{mediaGeral.toFixed(1)}</span>
                     </td>
                     <td className="text-center py-4 px-4">
-                      <Badge variant={mediaGeral >= 6 ? 'default' : 'destructive'} className="text-base px-4 py-1">
-                        {status(mediaGeral)}
+                      <Badge variant={varianteBadge(statusNota(mediaGeral))} className="text-base px-4 py-1">
+                        {statusNota(mediaGeral)}
                       </Badge>
                     </td>
                   </tr>

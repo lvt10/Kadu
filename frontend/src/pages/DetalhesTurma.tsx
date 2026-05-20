@@ -3,8 +3,10 @@ import { useNavigate, useParams } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
+import { Skeleton } from '../components/ui/skeleton'
 import { ArrowLeft, Users, TrendingUp } from 'lucide-react'
 import { api } from '../lib/api'
+import { corNota } from '../lib/grades'
 
 interface NotaBimestral {
   aluno_id: string; bimestre1: number|null; bimestre2: number|null
@@ -19,18 +21,48 @@ interface Turma {
   alunos: Aluno[]
 }
 
-function obterCorNota(nota: number | null) {
-  if (nota === null) return 'text-gray-400'
-  if (nota >= 9) return 'text-green-600'
-  if (nota >= 7) return 'text-blue-600'
-  if (nota >= 6) return 'text-yellow-600'
-  return 'text-red-600'
-}
-
 function calcularMedia(nota: NotaBimestral) {
   const vals = [nota.bimestre1, nota.bimestre2, nota.bimestre3, nota.bimestre4].filter(v => v !== null) as number[]
   if (!vals.length) return null
   return vals.reduce((a, b) => a + b, 0) / vals.length
+}
+
+function DetalhesSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-9 w-40" />
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-4 h-4 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-4 w-36" />
+            </div>
+            <Skeleton className="h-8 w-20" />
+          </div>
+        </CardHeader>
+      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="pb-2"><Skeleton className="h-4 w-32" /></CardHeader>
+          <CardContent><Skeleton className="h-9 w-16" /></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><Skeleton className="h-4 w-32" /></CardHeader>
+          <CardContent><Skeleton className="h-9 w-16" /></CardContent>
+        </Card>
+      </div>
+      <Card>
+        <CardHeader><Skeleton className="h-6 w-36" /></CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
 }
 
 export default function DetalhesTurma() {
@@ -46,14 +78,13 @@ export default function DetalhesTurma() {
       api.get<NotaBimestral[]>(`/notas/turma/${turmaId}`),
     ]).then(([t, ns]) => {
       setTurma(t)
-      // Indexa notas por aluno_id
       const idx: Record<string, NotaBimestral> = {}
       for (const n of ns) idx[n.aluno_id] = n
       setNotas(idx)
     }).finally(() => setLoading(false))
   }, [turmaId])
 
-  if (loading) return <div className="flex justify-center py-20 text-gray-400">Carregando...</div>
+  if (loading) return <DetalhesSkeleton />
 
   if (!turma) return (
     <div className="space-y-6">
@@ -99,7 +130,7 @@ export default function DetalhesTurma() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${turma.media >= 7 ? 'text-green-600' : 'text-orange-600'}`}>
+            <div className={`text-3xl font-bold ${corNota(turma.media)}`}>
               {turma.media.toFixed(1)}
             </div>
           </CardContent>
@@ -130,11 +161,11 @@ export default function DetalhesTurma() {
                       <td className="py-3 px-4 text-gray-600">{aluno.matricula}</td>
                       {[n?.bimestre1, n?.bimestre2, n?.bimestre3, n?.bimestre4].map((v, i) => (
                         <td key={i} className="text-center py-3 px-4">
-                          <span className={`font-semibold ${obterCorNota(v ?? null)}`}>{fmt(v)}</span>
+                          <span className={`font-semibold ${corNota(v ?? null)}`}>{fmt(v)}</span>
                         </td>
                       ))}
                       <td className="text-center py-3 px-4">
-                        <span className={`font-bold text-lg ${obterCorNota(media)}`}>{fmt(media)}</span>
+                        <span className={`font-bold text-lg ${corNota(media)}`}>{fmt(media)}</span>
                       </td>
                     </tr>
                   )
@@ -161,14 +192,14 @@ export default function DetalhesTurma() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-gray-500">Média</p>
-                      <p className={`font-bold text-2xl ${obterCorNota(media)}`}>{fmt(media)}</p>
+                      <p className={`font-bold text-2xl ${corNota(media)}`}>{fmt(media)}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-4 gap-2 text-center">
                     {[n?.bimestre1, n?.bimestre2, n?.bimestre3, n?.bimestre4].map((v, i) => (
                       <div key={i}>
                         <p className="text-xs text-gray-500 mb-1">{i+1}º Bim</p>
-                        <p className={`font-semibold text-lg ${obterCorNota(v ?? null)}`}>{fmt(v)}</p>
+                        <p className={`font-semibold text-lg ${corNota(v ?? null)}`}>{fmt(v)}</p>
                       </div>
                     ))}
                   </div>
