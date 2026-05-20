@@ -59,11 +59,16 @@ router.post('/registro/enviar-codigo', async (req, res) => {
   db.prepare('INSERT INTO codigos_verificacao (email, codigo, nome, senha, expira_em) VALUES (?, ?, ?, ?, ?)')
     .run(email, codigo, nome, hash, expira_em)
 
-  await enviarEmail({
-    to: email, toName: nome,
-    subject: 'Código de verificação — Kadu',
-    html: emailVerificacao(nome, codigo),
-  })
+  try {
+    await enviarEmail({
+      to: email, toName: nome,
+      subject: 'Código de verificação — Kadu',
+      html: emailVerificacao(nome, codigo),
+    })
+  } catch (e) {
+    console.error('Erro ao enviar email de verificação:', e.message)
+    return res.status(502).json({ erro: 'Não foi possível enviar o email de verificação. Tente novamente.' })
+  }
 
   res.json({ mensagem: 'Código enviado para o email' })
 })
@@ -111,11 +116,16 @@ router.post('/esqueci-senha', async (req, res) => {
 
   db.prepare('UPDATE professores SET senha_hash = ? WHERE email = ?').run(hash, email)
 
-  await enviarEmail({
-    to: email, toName: prof.nome,
-    subject: 'Sua nova senha temporária — Kadu',
-    html: emailSenhaTemporaria(prof.nome, senhaTemp),
-  })
+  try {
+    await enviarEmail({
+      to: email, toName: prof.nome,
+      subject: 'Sua nova senha temporária — Kadu',
+      html: emailSenhaTemporaria(prof.nome, senhaTemp),
+    })
+  } catch (e) {
+    console.error('Erro ao enviar email de senha temporária:', e.message)
+    return res.status(502).json({ erro: 'Não foi possível enviar o email. Tente novamente.' })
+  }
 
   res.json({ mensagem: 'Senha temporária enviada para o email' })
 })
