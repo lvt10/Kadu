@@ -21,7 +21,7 @@ router.get('/turma/:turmaId/aluno/:alunoId', auth, (req, res) => {
 router.post('/', auth, (req, res) => {
   const { alunoId, turmaId, bimestre1, bimestre2, bimestre3, bimestre4 } = req.body
   if (!alunoId || !turmaId) return res.status(400).json({ erro: 'alunoId e turmaId obrigatórios' })
-  const turma   = TurmaRepository.findById(turmaId)
+  const turma   = TurmaRepository.findById(turmaId, req.user.id)
   const nota    = repo.upsert({ alunoId, turmaId, materia: turma?.disciplina, bimestre1, bimestre2, bimestre3, bimestre4 })
   res.json(nota)
 })
