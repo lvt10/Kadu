@@ -43,13 +43,23 @@ const NotaRepository = {
   },
 
   upsert({ alunoId, turmaId, materia, bimestre1, bimestre2, bimestre3, bimestre4 }) {
-    db.prepare(`
-      INSERT INTO notas_bimestrais (aluno_id, turma_id, materia, bimestre1, bimestre2, bimestre3, bimestre4)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(aluno_id, turma_id) DO UPDATE SET
-        bimestre1 = excluded.bimestre1, bimestre2 = excluded.bimestre2,
-        bimestre3 = excluded.bimestre3, bimestre4 = excluded.bimestre4
-    `).run(alunoId, turmaId, materia ?? '', bimestre1 ?? null, bimestre2 ?? null, bimestre3 ?? null, bimestre4 ?? null)
+    const b1 = bimestre1 ?? null
+    const b2 = bimestre2 ?? null
+    const b3 = bimestre3 ?? null
+    const b4 = bimestre4 ?? null
+    const existing = this.findByTurmaAndAluno(turmaId, alunoId)
+    if (existing) {
+      db.prepare(`
+        UPDATE notas_bimestrais
+        SET bimestre1 = ?, bimestre2 = ?, bimestre3 = ?, bimestre4 = ?
+        WHERE aluno_id = ? AND turma_id = ?
+      `).run(b1, b2, b3, b4, alunoId, turmaId)
+    } else {
+      db.prepare(`
+        INSERT INTO notas_bimestrais (aluno_id, turma_id, materia, bimestre1, bimestre2, bimestre3, bimestre4)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(alunoId, turmaId, materia ?? '', b1, b2, b3, b4)
+    }
     return this.findByTurmaAndAluno(turmaId, alunoId)
   },
 }
