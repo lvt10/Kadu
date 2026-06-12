@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Skeleton } from '../components/ui/skeleton'
-import { ArrowLeft, User, ChevronRight, TrendingUp, TrendingDown, Search } from 'lucide-react'
+import { ArrowLeft, User, ChevronRight, TrendingUp, TrendingDown, Search, Table2 } from 'lucide-react'
 import { api } from '../lib/api'
 import { corNota } from '../lib/grades'
 
@@ -70,10 +70,13 @@ export default function NotasListaAlunos() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/notas')}><ArrowLeft className="w-5 h-5" /></Button>
-        <div>
+        <div className="flex-1">
           <h2 className="text-3xl font-bold text-gray-900">{turma.nome}</h2>
-          <p className="text-gray-500 mt-1">Selecione um aluno para lançar as notas</p>
+          <p className="text-gray-500 mt-1">Selecione um aluno ou use o lançamento em massa</p>
         </div>
+        <Button className="gap-2" onClick={() => navigate(`/notas/turma/${turmaId}/lancamento`)}>
+          <Table2 className="w-4 h-4" /> Lançamento em Massa
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

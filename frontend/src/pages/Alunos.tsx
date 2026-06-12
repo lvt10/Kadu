@@ -16,7 +16,7 @@ import { toast } from 'sonner'
 import { api } from '../lib/api'
 
 interface Turma { id: string; nome: string }
-interface Aluno  { id: string; nome: string; matricula: string; email: string; serie: string; turmaId: string; mediaNotas: number }
+interface Aluno  { id: string; nome: string; matricula: string; email: string; serie: string; turmaId: string; mediaNotas: number; pcd: number }
 
 function AlunosSkeleton() {
   return (
@@ -160,7 +160,10 @@ export default function Alunos() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-lg truncate">{aluno.nome}</CardTitle>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <CardTitle className="text-lg truncate">{aluno.nome}</CardTitle>
+                      {!!aluno.pcd && <Badge className="bg-amber-500 text-white text-xs shrink-0">PCD</Badge>}
+                    </div>
                     <p className="text-sm text-gray-500 mt-1">Matrícula: {aluno.matricula}</p>
                   </div>
                   <Button variant="ghost" size="icon"

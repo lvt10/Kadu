@@ -8,9 +8,10 @@ import DetalhesTurma     from './pages/DetalhesTurma'
 import Alunos            from './pages/Alunos'
 import CadastroAluno     from './pages/CadastroAluno'
 import Boletim           from './pages/Boletim'
-import NotasListaTurmas  from './pages/NotasListaTurmas'
-import NotasListaAlunos  from './pages/NotasListaAlunos'
-import NotasLancamento   from './pages/NotasLancamento'
+import NotasListaTurmas      from './pages/NotasListaTurmas'
+import NotasListaAlunos      from './pages/NotasListaAlunos'
+import NotasLancamento       from './pages/NotasLancamento'
+import NotasLancamentoTurma  from './pages/NotasLancamentoTurma'
 import Dashboard         from './pages/Dashboard'
 
 export const router = createBrowserRouter([
@@ -27,9 +28,10 @@ export const router = createBrowserRouter([
       { path: 'alunos',                               element: <Alunos /> },
       { path: 'alunos/cadastrar',                     element: <CadastroAluno /> },
       { path: 'alunos/:alunoId/boletim',              element: <Boletim /> },
-      { path: 'notas',                                element: <NotasListaTurmas /> },
-      { path: 'notas/turma/:turmaId',                 element: <NotasListaAlunos /> },
-      { path: 'notas/turma/:turmaId/aluno/:alunoId',  element: <NotasLancamento /> },
+      { path: 'notas',                                        element: <NotasListaTurmas /> },
+      { path: 'notas/turma/:turmaId',                       element: <NotasListaAlunos /> },
+      { path: 'notas/turma/:turmaId/lancamento',            element: <NotasLancamentoTurma /> },
+      { path: 'notas/turma/:turmaId/aluno/:alunoId',        element: <NotasLancamento /> },
     ],
   },
 ])

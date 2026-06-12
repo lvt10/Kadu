@@ -15,10 +15,10 @@ router.get('/', auth, (req, res) => {
 })
 
 router.post('/', auth, (req, res) => {
-  const { nome, matricula, email, serie, turmas: turmaIds } = req.body
+  const { nome, matricula, email, serie, pcd, turmas: turmaIds } = req.body
   if (!nome || !matricula) return res.status(400).json({ erro: 'Nome e matrícula são obrigatórios' })
   try {
-    const aluno = repo.create({ id: randomUUID(), nome, matricula, email, serie, turmaIds })
+    const aluno = repo.create({ id: randomUUID(), nome, matricula, email, serie, pcd, turmaIds })
     res.status(201).json({ ...aluno, mediaNotas: 0 })
   } catch (e) {
     if (e.message?.includes('UNIQUE')) return res.status(409).json({ erro: 'Matrícula já cadastrada' })

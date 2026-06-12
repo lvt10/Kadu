@@ -9,7 +9,7 @@ import { api } from '../lib/api'
 import { corNota, statusNota, varianteBadge } from '../lib/grades'
 
 interface NotaBimestral {
-  id: number; materia: string; turmaNome: string
+  id: number; materia: string; turmaNome: string; mediaTurma?: number
   bimestre1: number|null; bimestre2: number|null; bimestre3: number|null; bimestre4: number|null
 }
 interface Aluno { id: string; nome: string; matricula: string; serie: string }
@@ -118,7 +118,7 @@ export default function Boletim() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b-2 border-gray-300">
-                    {['Matéria','1º Bimestre','2º Bimestre','3º Bimestre','4º Bimestre','Média','Status'].map(h => (
+                    {['Matéria','1º Bimestre','2º Bimestre','3º Bimestre','4º Bimestre','Média','Média da Turma','Status'].map(h => (
                       <th key={h} className={`py-3 px-4 font-semibold text-gray-700 ${h === 'Matéria' ? 'text-left' : 'text-center'}`}>{h}</th>
                     ))}
                   </tr>
@@ -140,6 +140,11 @@ export default function Boletim() {
                           <span className={`font-bold text-lg ${corNota(media)}`}>{fmt(media)}</span>
                         </td>
                         <td className="text-center py-3 px-4">
+                          <span className={`font-semibold ${corNota(nota.mediaTurma ?? null)}`}>
+                            {nota.mediaTurma != null ? nota.mediaTurma.toFixed(1) : '—'}
+                          </span>
+                        </td>
+                        <td className="text-center py-3 px-4">
                           <Badge variant={varianteBadge(stat)}>{stat}</Badge>
                         </td>
                       </tr>
@@ -149,6 +154,7 @@ export default function Boletim() {
                 <tfoot>
                   <tr className="border-t-2 border-gray-300 bg-gray-50">
                     <td className="py-4 px-4 font-bold" colSpan={5}>Média Geral</td>
+                    <td className="py-4 px-4" />
                     <td className="text-center py-4 px-4">
                       <span className={`font-bold text-xl ${corNota(mediaGeral)}`}>{mediaGeral.toFixed(1)}</span>
                     </td>

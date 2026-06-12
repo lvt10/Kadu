@@ -40,15 +40,15 @@ const AlunoRepository = {
     `).all(alunoId))
   },
 
-  create({ id, nome, matricula, email, serie, turmaIds }) {
+  create({ id, nome, matricula, email, serie, pcd, turmaIds }) {
     transacao(() => {
       let serieAluno = serie ?? ''
       if (!serieAluno && turmaIds?.length) {
         const t = plain(db.prepare('SELECT serie FROM turmas WHERE id = ?').get(turmaIds[0]))
         if (t) serieAluno = t.serie
       }
-      db.prepare('INSERT INTO alunos (id, nome, matricula, email, serie) VALUES (?, ?, ?, ?, ?)')
-        .run(id, nome, matricula, email ?? '', serieAluno)
+      db.prepare('INSERT INTO alunos (id, nome, matricula, email, serie, pcd) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(id, nome, matricula, email ?? '', serieAluno, pcd ? 1 : 0)
       if (turmaIds?.length) {
         const link = db.prepare('INSERT OR IGNORE INTO aluno_turma (aluno_id, turma_id) VALUES (?, ?)')
         for (const tid of turmaIds) link.run(id, tid)
@@ -57,14 +57,16 @@ const AlunoRepository = {
     return plain(db.prepare('SELECT * FROM alunos WHERE id = ?').get(id))
   },
 
-  update(id, { nome, email, serie }) {
+  update(id, { nome, email, serie, pcd }) {
     db.prepare(`
       UPDATE alunos SET
         nome  = CASE WHEN ? IS NOT NULL THEN ? ELSE nome  END,
         email = CASE WHEN ? IS NOT NULL THEN ? ELSE email END,
-        serie = CASE WHEN ? IS NOT NULL THEN ? ELSE serie END
+        serie = CASE WHEN ? IS NOT NULL THEN ? ELSE serie END,
+        pcd   = CASE WHEN ? IS NOT NULL THEN ? ELSE pcd   END
       WHERE id = ?
-    `).run(nome ?? null, nome ?? null, email ?? null, email ?? null, serie ?? null, serie ?? null, id)
+    `).run(nome ?? null, nome ?? null, email ?? null, email ?? null, serie ?? null, serie ?? null,
+           pcd != null ? 1 : null, pcd != null ? (pcd ? 1 : 0) : null, id)
     return plain(db.prepare('SELECT * FROM alunos WHERE id = ?').get(id))
   },
 

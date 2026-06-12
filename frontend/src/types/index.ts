@@ -30,6 +30,7 @@ export interface Aluno {
   matricula: string
   email: string
   serie: string
+  pcd: number
   turmaId?: string
   mediaNotas: number
   turmas?: Turma[]
@@ -41,6 +42,7 @@ export interface NotaBimestral {
   turma_id: string
   materia?: string
   turmaNome?: string
+  mediaTurma?: number
   bimestre1: number | null
   bimestre2: number | null
   bimestre3: number | null
