@@ -42,8 +42,12 @@ db.exec(`CREATE TABLE IF NOT EXISTS alunos (
   matricula  TEXT    NOT NULL UNIQUE,
   email      TEXT    DEFAULT '',
   serie      TEXT    DEFAULT '',
+  pcd        INTEGER DEFAULT 0,
   created_at TEXT    DEFAULT (datetime('now'))
 )`)
+
+// Migração: adiciona coluna pcd em bancos já existentes
+try { db.exec(`ALTER TABLE alunos ADD COLUMN pcd INTEGER DEFAULT 0`) } catch (_) {}
 
 db.exec(`CREATE TABLE IF NOT EXISTS aluno_turma (
   aluno_id TEXT NOT NULL REFERENCES alunos(id) ON DELETE CASCADE,

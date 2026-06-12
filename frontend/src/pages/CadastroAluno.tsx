@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import { Switch } from '../components/ui/switch'
 import { ArrowLeft, Save, User, Users, Plus, Trash2 } from 'lucide-react'
 import { api } from '../lib/api'
 
@@ -16,7 +17,7 @@ export default function CadastroAluno() {
   const [turmas,      setTurmas]      = useState<Turma[]>([])
   const [carregando,  setCarregando]  = useState(false)
   const [erro,        setErro]        = useState('')
-  const [form, setForm] = useState({ nome: '', matricula: '' })
+  const [form, setForm] = useState({ nome: '', matricula: '', pcd: false })
   const [vinculos, setVinculos] = useState<Vinculo[]>([{ id: crypto.randomUUID(), turmaId: '' }])
 
   useEffect(() => { api.get<Turma[]>('/turmas').then(setTurmas) }, [])
@@ -67,6 +68,15 @@ export default function CadastroAluno() {
                 <Input placeholder="2026001234" value={form.matricula}
                   onChange={e => setForm(p => ({ ...p, matricula: e.target.value }))} required />
               </div>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div>
+                <p className="font-medium text-amber-900">PCD — Pessoa com Deficiência</p>
+                <p className="text-sm text-amber-700">Marque se o aluno possui necessidades especiais</p>
+              </div>
+              <Switch
+                checked={form.pcd}
+                onCheckedChange={val => setForm(p => ({ ...p, pcd: val }))} />
             </div>
           </CardContent>
         </Card>
