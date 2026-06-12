@@ -25,6 +25,7 @@ export interface Turma {
 }
 
 export interface Aluno {
+  pcd: boolean
   id: string
   nome: string
   matricula: string

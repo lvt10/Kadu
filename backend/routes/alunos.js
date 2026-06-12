@@ -10,37 +10,21 @@ router.get('/', auth, (req, res) => {
   const alunos = turmaId ? repo.findByTurma(turmaId) : repo.findAll(req.user.id)
   res.json(alunos.map(a => ({
     ...a,
-    mediaNotas: turmaId ? NotaService.mediaAlunoPorTurma(a.id, turmaId) : 0
+    mediaNotas: turmaId ? NotaService.mediaAlunoTurma(a.id, turmaId) : null
   })))
 })
 
 router.post('/', auth, (req, res) => {
-  const { nome, matricula, email, serie, turmas: turmaIds } = req.body
-  if (!nome || !matricula) return res.status(400).json({ erro: 'Nome e matrícula são obrigatórios' })
-  try {
-    const aluno = repo.create({ id: randomUUID(), nome, matricula, email, serie, turmaIds })
-    res.status(201).json({ ...aluno, mediaNotas: 0 })
-  } catch (e) {
-    if (e.message?.includes('UNIQUE')) return res.status(409).json({ erro: 'Matrícula já cadastrada' })
-    throw e
+  const { nome, matricula, turmaIds, pcd } = req.body
+  if (!nome || !matricula) return res.status(400).json({ error: 'Nome e Matrícula obrigatórios' })
+
+  const id = randomUUID()
+  repo.create({ id, nome, matricula, pcd })
+
+  if (Array.isArray(turmaIds)) {
+    turmaIds.forEach(tId => repo.vincularTurma(id, tId))
   }
-})
-
-router.get('/:id', auth, (req, res) => {
-  const aluno = repo.findById(req.params.id)
-  if (!aluno) return res.status(404).json({ erro: 'Aluno não encontrado' })
-  const turmas = repo.findTurmasByAluno(req.params.id)
-  res.json({ ...aluno, turmas, mediaNotas: NotaService.mediaAluno(req.params.id) })
-})
-
-router.put('/:id', auth, (req, res) => {
-  if (!repo.findById(req.params.id)) return res.status(404).json({ erro: 'Aluno não encontrado' })
-  res.json(repo.update(req.params.id, req.body))
-})
-
-router.delete('/:id', auth, (req, res) => {
-  if (!repo.delete(req.params.id)) return res.status(404).json({ erro: 'Aluno não encontrado' })
-  res.json({ mensagem: 'Aluno removido com sucesso' })
+  res.status(201).json({ id, nome, matricula, pcd })
 })
 
 module.exports = router
