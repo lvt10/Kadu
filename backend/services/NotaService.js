@@ -1,5 +1,6 @@
 'use strict'
-const NotaRepository = require('../repositories/NotaRepository')
+const NotaRepository   = require('../repositories/NotaRepository')
+const TurmaRepository  = require('../repositories/TurmaRepository')
 
 function calcularMedia(vals) {
   if (!vals.length) return 0
@@ -39,6 +40,25 @@ const NotaService = {
       [n.bimestre1, n.bimestre2, n.bimestre3, n.bimestre4].filter(v => v !== null)
     )
     return calcularMedia(vals)
+  },
+
+  salvar(turmaId, professorId, { alunoId, bimestre1, bimestre2, bimestre3, bimestre4 }) {
+    const turma = TurmaRepository.findById(turmaId, professorId)
+    return NotaRepository.upsert({ alunoId, turmaId, materia: turma?.disciplina,
+      bimestre1, bimestre2, bimestre3, bimestre4 })
+  },
+
+  salvarLote(turmaId, professorId, notas) {
+    const turma = TurmaRepository.findById(turmaId, professorId)
+    return notas.map(n => NotaRepository.upsert({
+      alunoId:   n.alunoId,
+      turmaId,
+      materia:   turma?.disciplina,
+      bimestre1: n.bimestre1,
+      bimestre2: n.bimestre2,
+      bimestre3: n.bimestre3,
+      bimestre4: n.bimestre4,
+    }))
   },
 
   distribuicao() {

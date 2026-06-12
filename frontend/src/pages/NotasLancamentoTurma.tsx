@@ -7,7 +7,7 @@ import { Skeleton } from '../components/ui/skeleton'
 import { ArrowLeft, Save, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '../lib/api'
-import { corNota } from '../lib/grades'
+import { corNota, parseNota, mediaRow } from '../lib/grades'
 
 interface Aluno { id: string; nome: string; matricula: string }
 interface Turma  { id: string; nome: string; disciplina: string; alunos: Aluno[] }
@@ -19,19 +19,8 @@ interface NotaRow {
   bimestre4: string
 }
 
-function parseNota(v: string): number | null {
-  if (v.trim() === '') return null
-  const n = parseFloat(v.replace(',', '.'))
-  if (isNaN(n)) return null
-  return Math.min(10, Math.max(0, n))
-}
-
-function media(row: NotaRow): number | null {
-  const vals = [row.bimestre1, row.bimestre2, row.bimestre3, row.bimestre4]
-    .map(parseNota).filter(v => v !== null) as number[]
-  if (!vals.length) return null
-  return parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1))
-}
+const mediaRow_ = (row: NotaRow) =>
+  mediaRow([row.bimestre1, row.bimestre2, row.bimestre3, row.bimestre4])
 
 export default function NotasLancamentoTurma() {
   const navigate = useNavigate()
@@ -138,7 +127,7 @@ export default function NotasLancamentoTurma() {
             <tbody>
               {rows.map((row, idx) => {
                 const aluno = turma.alunos.find(a => a.id === row.alunoId)!
-                const m = media(row)
+                const m = mediaRow_(row)
                 return (
                   <tr key={row.alunoId} className={`border-b ${idx % 2 === 0 ? '' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
                     <td className="py-2 px-4 font-medium text-gray-900">{aluno.nome}</td>

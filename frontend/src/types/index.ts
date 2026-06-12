@@ -30,7 +30,7 @@ export interface Aluno {
   matricula: string
   email: string
   serie: string
-  pcd: number
+  pcd: boolean
   turmaId?: string
   mediaNotas: number
   turmas?: Turma[]

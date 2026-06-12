@@ -28,7 +28,7 @@ export default function CadastroAluno() {
     setCarregando(true)
     try {
       const turmaIds = vinculos.map(v => v.turmaId).filter(Boolean)
-      await api.post('/alunos', { ...form, pcd: form.pcd ? 1 : 0, turmas: turmaIds })
+      await api.post('/alunos', { ...form, turmas: turmaIds })
       navigate('/alunos')
     } catch (e: unknown) {
       setErro(e instanceof Error ? e.message : 'Erro ao salvar')
